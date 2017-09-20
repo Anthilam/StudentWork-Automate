@@ -4,20 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-// Structure représentant un état de l'automate
-struct state {
-	int number;
-	bool is_initial;
-	bool is_final;
-};
-
-/* Structure représentant une transition, avec l'état de départ,
-l'état d'arrivée, et la lettre de transition */
-struct transition {
-	struct state start;
-	struct state end;
-	char letter;
-};
+#include "states.h"
 
 /* Structure représentant l'automate, avec alpha_count la taille de l'alphabet
 et state_count le nombre d'états de l'automate */
