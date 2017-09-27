@@ -4,12 +4,16 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+struct list{
+	int value;
+	struct list *next;
+};
 /* Structure représentant l'automate, avec alpha_count la taille de l'alphabet
 et state_count le nombre d'états de l'automate */
 struct fa {
 	size_t alpha_count;
 	size_t state_count;
-	struct state *state_array;
+	struct list **state_array;
 	int *array_init;
 	int *array_final;
 };

@@ -3,10 +3,19 @@
 #include "fa.h"
 
 /*
+
+struct list{
+	int value;
+	struct list *next;
+}	
+
+*/
+
+/*
 struct fa {
 	size_t alpha_count;
 	size_t state_count;
-	struct state **state_array;
+	struct list **state_array;
 	int *array_init;
 	int *array_final;
 };
@@ -17,16 +26,20 @@ void fa_create(struct fa *self, size_t alpha_count, size_t state_count) {
 	self->alpha_count = alpha_count;
 	self->state_count = state_count;
 	fa_create_state_list(self);
-	self->first_transition = NULL;
+	self->array_init=NULL;
+	self->array_final=NULL;
 }
 
 void fa_create_state_list(struct fa *self){
-	self->state_array = malloc(self->state_count);
+	self->state_array = malloc(sizeof(struct list)*self->state_count);
+	for(int i=0; i< self->state_count;i++){
+		self->state_array[i] = malloc (sizeof(struct list)*self->alpha_count);
+	}
 }
 
 void fa_destroy_state_list(struct fa *self){
 	for(int i = 0; i < self->state_count; i++){
-		states_destroy(&self->state_array[i]);
+		free(&self->state_array[i]);
 	}
 	free(self->state_array);
 }
@@ -42,11 +55,11 @@ void fa_destroy(struct fa *self) {
 }
 
 void fa_set_state_initial(struct fa *self, size_t state) {
-	self->state_array[state].is_initial = true;
+	
 }
 
 void fa_set_state_final(struct fa *self, size_t state) {
-	self->state_array[state].is_final = true;
+	
 }
 
 void fa_add_transition(struct fa *self, size_t from, char alpha, size_t to) {

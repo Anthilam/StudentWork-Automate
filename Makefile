@@ -7,7 +7,7 @@ testfa: fa.o testfa.o
 	gcc -g -Wall -std=c99 -o testfa $^
 
 testfa.o: testfa.c fa.h
-	gcc $(CFLAGS) testfa.o $<
+	gcc $(CFLAGS) testfa.o $< -lcunit
 
 fa.o: fa.c
 	gcc $(CFLAGS) fa.o $<
