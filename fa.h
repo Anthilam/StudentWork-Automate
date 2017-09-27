@@ -5,9 +5,14 @@
 #include <stdbool.h>
 
 struct list{
-	int value;
-	struct list *next;
+	struct list_node *first;
 };
+
+struct list_node {
+	int value;
+	struct list_node *next;
+};
+
 /* Structure représentant l'automate, avec alpha_count la taille de l'alphabet
 et state_count le nombre d'états de l'automate */
 struct fa {
@@ -30,8 +35,11 @@ void fa_destroy(struct fa *self);
 // Destruction d'une liste d'etat
 void fa_destroy_state_list(struct fa *self);
 
-// Destruction de la liste des transitions
-void fa_destroy_transition_list(struct fa *self);
+// Destruction d'une liste de transitions
+void fa_destroy_list_node(struct list_node *self);
+void fa_destroy_list(struct list *self);
+
+void fa_add_node_transition(struct list_node *self, size_t to);
 
 
 void fa_set_state_initial(struct fa *self, size_t state);

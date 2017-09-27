@@ -41,7 +41,6 @@ void test_fa_set_state_final(void) {
 
 	fa_set_state_final(&a, 1);
 
-
 	fa_destroy(&a);
 }
 
@@ -54,9 +53,19 @@ void test_fa_add_transition(void) {
 int main() {
 	//CU_TestRegistry* CU_pTestRegistry;
 	//CU_initialize_registry();
-	
+
 	struct fa a1;
-	fa_create(&a1, 4,2);
+	fa_create(&a1, 4, 4);
+
+	// Tester transition add
+	fa_add_transition(&a1, 1, 'a', 2);
+	printf("%d\n", a1.state_array[1][0].first->value);
+	fa_add_transition(&a1, 1, 'b', 2);
+	printf("%d\n", a1.state_array[1][1].first->value);
+	fa_add_transition(&a1, 1, 'c', 2);
+	printf("%d\n", a1.state_array[1][2].first->value);
+	fa_add_transition(&a1, 1, 'c', 3);
+	printf("%d\n", a1.state_array[1][2].first->next->value);
+
 	fa_destroy(&a1);
-	printf("Hello world!\n");
 }
