@@ -4,14 +4,14 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "states.h"
-
 /* Structure représentant l'automate, avec alpha_count la taille de l'alphabet
 et state_count le nombre d'états de l'automate */
 struct fa {
 	size_t alpha_count;
 	size_t state_count;
 	struct state *state_array;
+	int *array_init;
+	int *array_final;
 };
 
 // Creation d'un automate
@@ -26,7 +26,7 @@ void fa_destroy(struct fa *self);
 // Destruction d'une liste d'etat
 void fa_destroy_state_list(struct fa *self);
 
-// Destruction de la liste des transitions 
+// Destruction de la liste des transitions
 void fa_destroy_transition_list(struct fa *self);
 
 
