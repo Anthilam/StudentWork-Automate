@@ -29,18 +29,3 @@ void states_destroy(struct state *self){
 	free(self);
 }
 
-// Creation d'une nouvelle transition
-void transition_creates(struct transition *self, struct state *from,struct state *to,char letter){
-	assert(from != NULL);
-	assert(to != NULL);
-	self = malloc(sizeof(struct transition));
-	self->start = from;
-	self->end = to;
-	self->letter= letter;
-}
-
-void transistion_destroy(struct transition *self){
-	self->start =NULL;
-	self->end =NULL;
-	free(self);
-}
