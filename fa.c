@@ -22,7 +22,6 @@ struct fa {
 */
 
 void fa_create(struct fa *self, size_t alpha_count, size_t state_count) {
-	self = malloc(sizeof(struct fa));
 	self->alpha_count = alpha_count;
 	self->state_count = state_count;
 	fa_create_state_list(self);
@@ -37,21 +36,11 @@ void fa_create_state_list(struct fa *self){
 	}
 }
 
-void fa_destroy_state_list(struct fa *self){
+void fa_destroy(struct fa *self) {
 	for(int i = 0; i < self->state_count; i++){
-		free(&self->state_array[i]);
+		free(self->state_array[i]);
 	}
 	free(self->state_array);
-}
-
-void fa_destroy_transition_list(struct fa *self){
-
-}
-
-void fa_destroy(struct fa *self) {
-	fa_destroy_state_list(self);
-	fa_destroy_transition_list(self);
-	free(self);
 }
 
 void fa_set_state_initial(struct fa *self, size_t state) {

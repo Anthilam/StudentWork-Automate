@@ -52,8 +52,11 @@ void test_fa_add_transition(void) {
 }
 
 int main() {
-	CU_TestRegistry* CU_pTestRegistry;
-	CU_initialize_registry();
-
+	//CU_TestRegistry* CU_pTestRegistry;
+	//CU_initialize_registry();
+	
+	struct fa a1;
+	fa_create(&a1, 4,2);
+	fa_destroy(&a1);
 	printf("Hello world!\n");
 }
