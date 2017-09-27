@@ -4,7 +4,7 @@ PROGS=testfa
 all: $(PROGS)
 
 testfa: fa.o testfa.o
-	gcc -g -Wall -std=c99 -o testfa $^
+	gcc -g -Wall -std=c99 -o testfa $^ -lcunit
 
 testfa.o: testfa.c fa.h
 	gcc $(CFLAGS) testfa.o $< -lcunit
