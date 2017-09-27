@@ -13,14 +13,20 @@ struct list_node {
 	struct list_node *next;
 };
 
+struct dyn_tab{
+	int *value;
+	size_t used;
+	size_t size;
+};
+
 /* Structure représentant l'automate, avec alpha_count la taille de l'alphabet
 et state_count le nombre d'états de l'automate */
 struct fa {
 	size_t alpha_count;
 	size_t state_count;
 	struct list **state_array;
-	int *array_init;
-	int *array_final;
+	struct dyn_tab *array_init;
+	struct dyn_tab *array_final;
 };
 
 // Creation d'un automate

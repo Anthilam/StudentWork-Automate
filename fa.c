@@ -3,19 +3,25 @@
 #include "fa.h"
 
 /*
+
 struct list{
 	int value;
 	struct list *next;
-}
-*/
+};
 
-/*
+struct dyn_tab{
+	int *value;
+	size_t used;
+	size_t size;
+};
+
+
 struct fa {
 	size_t alpha_count;
 	size_t state_count;
 	struct list **state_array;
-	int *array_init;
-	int *array_final;
+	struct dyn_tab *array_init;
+	struct dyn_tab *array_final;
 };
 */
 
@@ -55,6 +61,8 @@ void fa_destroy(struct fa *self) {
 		free(self->state_array[i]);
 	}
 	free(self->state_array);
+	free(self->array_init);
+	free(self->array_final);
 }
 
 // Destruction d'une liste de transitions
@@ -73,11 +81,47 @@ void fa_destroy_list(struct list *self) {
 }
 
 void fa_set_state_initial(struct fa *self, size_t state) {
-
+	if(self->array_init == NULL){
+		self->array_init->value = malloc(sizeof(int)*10);
+		self->array_init->used = 0;
+		self->array_init->size = 10;
+	}
+	if(self->array_init->used == self->array_init->size){
+		int tmp[self->array_init->size * 2];
+		for(int i=0;i<self->array_init->used;i++){
+			tmp[i] = self->array_init->value[i];
+		}
+		free(self->array_init->value);
+		self->array_init->value = malloc(sizeof(int)*self->array_init->size*2);
+		self->array_init->size = self->array_init->size*2;
+		for(int i=0;i<self->array_init->used;i++){
+			self->array_init->value[i] = tmp[i];
+		}
+		free(tmp);
+	}
+	self->array_init->value[self->array_init->used] = state;
 }
 
 void fa_set_state_final(struct fa *self, size_t state) {
-
+	if(self->array_final == NULL){
+		self->array_final->value = malloc(sizeof(int)*10);
+		self->array_final->used = 0;
+		self->array_final->size = 10;
+	}
+	if(self->array_final->used == self->array_final->size){
+		int tmp[self->array_final->size * 2];
+		for(int i=0;i<self->array_final->used;i++){
+			tmp[i] = self->array_final->value[i];
+		}
+		free(self->array_final->value);
+		self->array_final->value = malloc(sizeof(int)*self->array_final->size*2);
+		self->array_final->size = self->array_final->size*2;
+		for(int i=0;i<self->array_final->used;i++){
+			self->array_final->value[i] = tmp[i];
+		}
+		free(tmp);
+	}
+	self->array_final->value[self->array_final->used] = state;
 }
 
 // Ajout d'une transition dans la liste des transitions
