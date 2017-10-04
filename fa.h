@@ -48,17 +48,24 @@ void fa_destroy_list(struct list *self);
 
 void fa_add_node_transition(struct list_node *self, size_t to);
 
-
 void fa_set_state_initial(struct fa *self, size_t state);
-
 
 void fa_set_state_final(struct fa *self, size_t state);
 
-
 void fa_add_transition(struct fa *self, size_t from, char alpha, size_t to);
-
 
 void fa_pretty_print(const struct fa *self, FILE *out);
 
-
 void fa_dot_print(const struct fa *self, FILE *out);
+
+void fa_remove_transition(struct fa *self, size_t from, char alpha, size_t to);
+
+void fa_remove_state(struct fa *self, size_t state);
+
+size_t fa_count_transitions(const struct fa *self);
+
+bool fa_is_deterministic(const struct fa *self);
+
+bool fa_is_complete(const struct fa *self);
+
+void fa_make_complete(struct fa *self);

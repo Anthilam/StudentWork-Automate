@@ -3,7 +3,6 @@
 #include "fa.h"
 
 /*
-
 struct list{
 	int value;
 	struct list *next;
@@ -24,7 +23,6 @@ struct fa {
 	struct dyn_tab array_final;
 };
 */
-
 
 // Création de l'automate
 void fa_create(struct fa *self, size_t alpha_count, size_t state_count) {
@@ -186,5 +184,29 @@ void fa_pretty_print(const struct fa *self, FILE *out) {
 }
 
 void fa_dot_print(const struct fa *self, FILE *out) {
+
+}
+
+void fa_remove_transition(struct fa *self, size_t from, char alpha, size_t to) {
+
+}
+
+void fa_remove_state(struct fa *self, size_t state) {
+
+}
+
+size_t fa_count_transitions(const struct fa *self) {
+
+}
+
+bool fa_is_deterministic(const struct fa *self) {
+
+}
+
+bool fa_is_complete(const struct fa *self) {
+
+}
+
+void fa_make_complete(struct fa *self) {
 
 }
