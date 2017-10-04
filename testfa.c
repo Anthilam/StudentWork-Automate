@@ -53,7 +53,30 @@ void test_fa_add_transition(void) {
 int main() {
 	//CU_TestRegistry* CU_pTestRegistry;
 	//CU_initialize_registry();
+	
+	/*
 
+	struct list{
+		int value;
+		struct list *next;
+	};
+
+	struct dyn_tab{
+		int *value; 
+		size_t used; 
+		size_t size; 
+	};
+
+
+	struct fa {
+		size_t alpha_count;
+		size_t state_count;
+		struct list **state_array;
+		struct dyn_tab array_init;
+		struct dyn_tab array_final;
+	};
+	*/
+			
 	struct fa a1;
 	fa_create(&a1, 4, 4);
 
@@ -67,5 +90,8 @@ int main() {
 	fa_add_transition(&a1, 1, 'c', 3);
 	printf("%d\n", a1.state_array[1][2].first->next->value);
 
+	fa_set_state_initial(&a1,1);
+	printf("nombre utilise : %zu\n",a1.array_init.used);
+	printf("%d\n",a1->array_init.value[0]);
 	fa_destroy(&a1);
 }

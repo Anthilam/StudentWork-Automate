@@ -10,9 +10,9 @@ struct list{
 };
 
 struct dyn_tab{
-	int *value;
-	size_t used;
-	size_t size;
+	int *value; 
+	size_t used; 
+	size_t size; 
 };
 
 
@@ -20,17 +20,18 @@ struct fa {
 	size_t alpha_count;
 	size_t state_count;
 	struct list **state_array;
-	struct dyn_tab *array_init;
-	struct dyn_tab *array_final;
+	struct dyn_tab array_init;
+	struct dyn_tab array_final;
 };
 */
+				
 
 // Création de l'automate
 void fa_create(struct fa *self, size_t alpha_count, size_t state_count) {
 	self->alpha_count = alpha_count;
 	self->state_count = state_count;
-	self->array_init = NULL;
-	self->array_final = NULL;
+	self->array_init.value= NULL;
+	self->array_final.value=NULL;
 	fa_create_state_list(self);
 }
 
@@ -61,8 +62,8 @@ void fa_destroy(struct fa *self) {
 		free(self->state_array[i]);
 	}
 	free(self->state_array);
-	free(self->array_init);
-	free(self->array_final);
+	free(self->array_init.value);
+	free(self->array_final.value);
 }
 
 // Destruction d'une liste de transitions
@@ -81,47 +82,48 @@ void fa_destroy_list(struct list *self) {
 }
 
 void fa_set_state_initial(struct fa *self, size_t state) {
-	if(self->array_init == NULL){
-		self->array_init->value = malloc(sizeof(int)*10);
-		self->array_init->used = 0;
-		self->array_init->size = 10;
+	if(self->array_init.value == NULL){
+		self->array_init.value = malloc(sizeof(int)*10);
+		self->array_init.used = 0;
+		self->array_init.size = 10;
 	}
-	if(self->array_init->used == self->array_init->size){
-		int tmp[self->array_init->size * 2];
-		for(int i=0;i<self->array_init->used;i++){
-			tmp[i] = self->array_init->value[i];
+	if(self->array_init.used == self->array_init.size){
+		int tmp[self->array_init.size * 2];
+		for(int i=0;i<self->array_init.used;i++){
+			tmp[i] = self->array_init.value[i];
 		}
-		free(self->array_init->value);
-		self->array_init->value = malloc(sizeof(int)*self->array_init->size*2);
-		self->array_init->size = self->array_init->size*2;
-		for(int i=0;i<self->array_init->used;i++){
-			self->array_init->value[i] = tmp[i];
+		free(self->array_init.value);
+		self->array_init.value = malloc(sizeof(int)*self->array_init.size*2);
+		self->array_init.size = self->array_init.size*2;
+		for(int i=0;i<self->array_init.used;i++){
+			self->array_init.value[i] = tmp[i];
 		}
-		free(tmp);
 	}
-	self->array_init->value[self->array_init->used] = state;
+	self->array_init.value[self->array_init.used] = state;
+	self->array_init.used++;
 }
 
 void fa_set_state_final(struct fa *self, size_t state) {
-	if(self->array_final == NULL){
-		self->array_final->value = malloc(sizeof(int)*10);
-		self->array_final->used = 0;
-		self->array_final->size = 10;
+	if(self->array_final.value == NULL){
+		self->array_final.value = malloc(sizeof(int)*10);
+		self->array_final.used = 0;
+		self->array_final.size = 10;
 	}
-	if(self->array_final->used == self->array_final->size){
-		int tmp[self->array_final->size * 2];
-		for(int i=0;i<self->array_final->used;i++){
-			tmp[i] = self->array_final->value[i];
+	if(self->array_final.used == self->array_final.size){
+		int tmp[self->array_final.size * 2];
+		for(int i=0;i<self->array_final.used;i++){
+			tmp[i] = self->array_final.value[i];
 		}
-		free(self->array_final->value);
-		self->array_final->value = malloc(sizeof(int)*self->array_final->size*2);
-		self->array_final->size = self->array_final->size*2;
-		for(int i=0;i<self->array_final->used;i++){
-			self->array_final->value[i] = tmp[i];
+		free(self->array_final.value);
+		self->array_final.value = malloc(sizeof(int)*self->array_final.size*2);
+		self->array_final.size = self->array_final.size*2;
+		for(int i=0;i<self->array_final.used;i++){
+			self->array_final.value[i] = tmp[i];
 		}
 		free(tmp);
 	}
-	self->array_final->value[self->array_final->used] = state;
+	self->array_final.value[self->array_final.used] = state;
+	self->array_final.used++;
 }
 
 // Ajout d'une transition dans la liste des transitions
@@ -153,7 +155,7 @@ void fa_add_node_transition(struct list_node *self, size_t to) {
 }
 
 void fa_pretty_print(const struct fa *self, FILE *out) {
-
+	
 }
 
 void fa_dot_print(const struct fa *self, FILE *out) {

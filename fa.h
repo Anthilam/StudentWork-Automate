@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <assert.h>
 
 struct list{
 	struct list_node *first;
@@ -25,8 +26,8 @@ struct fa {
 	size_t alpha_count;
 	size_t state_count;
 	struct list **state_array;
-	struct dyn_tab *array_init;
-	struct dyn_tab *array_final;
+	struct dyn_tab array_init;
+	struct dyn_tab array_final;
 };
 
 // Creation d'un automate
