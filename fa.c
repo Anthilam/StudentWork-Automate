@@ -10,9 +10,9 @@ struct list{
 };
 
 struct dyn_tab{
-	int *value; 
-	size_t used; 
-	size_t size; 
+	int *value;
+	size_t used;
+	size_t size;
 };
 
 
@@ -24,7 +24,7 @@ struct fa {
 	struct dyn_tab array_final;
 };
 */
-				
+
 
 // Création de l'automate
 void fa_create(struct fa *self, size_t alpha_count, size_t state_count) {
@@ -155,7 +155,34 @@ void fa_add_node_transition(struct list_node *self, size_t to) {
 }
 
 void fa_pretty_print(const struct fa *self, FILE *out) {
-	
+	printf("Initial states:\n\t");
+	if (self->array_init.value != NULL) {
+		for (int i = 0; i < self->array_init.used; ++i) {
+			printf("%d ", self->array_init.value[i]);
+		}
+	}
+	printf("\nFinal states:\n\t");
+	if (self->array_final.value != NULL) {
+		for (int i = 0; i < self->array_final.used; ++i) {
+			printf("%d ", self->array_final.value[i]);
+		}
+	}
+	printf("\nTransitions:\n");
+	for (int i = 0; i < self->state_count; ++i) {
+		printf("\tFor state %d:\n", i);
+		for (int j = 0; j < self->alpha_count; ++j) {
+			printf("\t\tFor letter '%c': ", j+'a');
+			if (self->state_array[i][j].first != NULL) {
+				struct list_node *l = self->state_array[i][j].first;
+				printf("%d ", l->value);
+				while (l->next != NULL) {
+					l = l->next;
+					printf("%d ", l->value);
+				}
+			}
+			printf("\n");
+		}
+	}
 }
 
 void fa_dot_print(const struct fa *self, FILE *out) {
