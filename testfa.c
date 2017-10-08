@@ -64,9 +64,13 @@ int main() {
 	fa_add_transition(&a1, 3, 'c', 2);
 
 	fa_set_state_initial(&a1,1);
+	fa_set_state_initial(&a1, 3);
 	fa_set_state_final(&a1, 2);
+	fa_set_state_final(&a1, 0);
 
 	fa_pretty_print(&a1, stdout);
+
+	printf("transitions nb = %lu\n", fa_count_transitions(&a1));
 
 	fa_destroy(&a1);
 }

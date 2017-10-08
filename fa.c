@@ -2,29 +2,7 @@
 
 #include "fa.h"
 
-/*
-struct list{
-	int value;
-	struct list *next;
-};
-
-struct dyn_tab{
-	int *value;
-	size_t used;
-	size_t size;
-};
-
-
-struct fa {
-	size_t alpha_count;
-	size_t state_count;
-	struct list **state_array;
-	struct dyn_tab array_init;
-	struct dyn_tab array_final;
-};
-*/
-
-// Création de l'automate
+// Création d'un automate
 void fa_create(struct fa *self, size_t alpha_count, size_t state_count) {
 	self->alpha_count = alpha_count;
 	self->state_count = state_count;
@@ -33,14 +11,14 @@ void fa_create(struct fa *self, size_t alpha_count, size_t state_count) {
 	fa_create_state_list(self);
 }
 
-// Création du tableau à deux dimensions états/alphabet
+// Création du tableau 2D états/alphabet
 void fa_create_state_list(struct fa *self){
 	// Allocation mémoire du tableau total
-	struct list **l = (struct list **) malloc(sizeof(struct list *)*self->state_count);
+	struct list **l = malloc(sizeof(struct list *)*self->state_count);
 
 	// Allocation mémoire de chaque cellules du tableau
 	for(int i = 0; i < self->state_count; ++i) {
-		l[i] = (struct list *) malloc(sizeof(struct list)*self->alpha_count);
+		l[i] = malloc(sizeof(struct list)*self->alpha_count);
 		for (int j = 0; j < self->alpha_count; ++j) {
 			// Initialisation de chaque liste
 			l[i][j].first = NULL;
@@ -50,7 +28,7 @@ void fa_create_state_list(struct fa *self){
 	self->state_array = l;
 }
 
-// Destruction du tableau à deux dimensions
+// Destruction d'un automate
 void fa_destroy(struct fa *self) {
 	for(int i = 0; i < self->state_count; ++i) {
 		for (int j = 0; j < self->alpha_count; ++j) {
@@ -79,61 +57,68 @@ void fa_destroy_list(struct list *self) {
 	self->first = NULL;
 }
 
+// Passage d'un état à état initial
 void fa_set_state_initial(struct fa *self, size_t state) {
-	if(self->array_init.value == NULL){
+	// Si il n'y a pas d'état initial
+	if (self->array_init.value == NULL) {
 		self->array_init.value = malloc(sizeof(int)*10);
 		self->array_init.used = 0;
 		self->array_init.size = 10;
 	}
-	if(self->array_init.used == self->array_init.size){
+
+	// Si le tableau est rempli
+	if (self->array_init.used == self->array_init.size) {
+		// Création d'un tableau deux fois plus grand
 		int tmp[self->array_init.size * 2];
-		for(int i=0;i<self->array_init.used;i++){
+		// Copie des données dans le nouveau tableau
+		for (int i = 0; i < self->array_init.used; ++i) {
 			tmp[i] = self->array_init.value[i];
 		}
-		free(self->array_init.value);
-		self->array_init.value = malloc(sizeof(int)*self->array_init.size*2);
-		self->array_init.size = self->array_init.size*2;
-		for(int i=0;i<self->array_init.used;i++){
-			self->array_init.value[i] = tmp[i];
-		}
+
+		self->array_init.value = tmp;
 	}
+
 	self->array_init.value[self->array_init.used] = state;
-	self->array_init.used++;
+	++self->array_init.used;
 }
 
+// Passage d'un état à état final
 void fa_set_state_final(struct fa *self, size_t state) {
-	if(self->array_final.value == NULL){
+	// Si il n'y a pas d'état final
+	if (self->array_final.value == NULL) {
 		self->array_final.value = malloc(sizeof(int)*10);
 		self->array_final.used = 0;
 		self->array_final.size = 10;
 	}
-	if(self->array_final.used == self->array_final.size){
+
+	// Si le tableau est rempli
+	if (self->array_final.used == self->array_final.size) {
+		// Création d'un tableau deux fois plus grand
 		int tmp[self->array_final.size * 2];
-		for(int i=0;i<self->array_final.used;i++){
+		// Copie des données dans le nouveau tableau
+		for (int i = 0; i < self->array_final.used; ++i) {
 			tmp[i] = self->array_final.value[i];
 		}
-		free(self->array_final.value);
-		self->array_final.value = malloc(sizeof(int)*self->array_final.size*2);
-		self->array_final.size = self->array_final.size*2;
-		for(int i=0;i<self->array_final.used;i++){
-			self->array_final.value[i] = tmp[i];
-		}
-		free(tmp);
+
+		self->array_final.value = tmp;
 	}
+
 	self->array_final.value[self->array_final.used] = state;
-	self->array_final.used++;
+	++self->array_final.used;
 }
 
-// Ajout d'une transition dans la liste des transitions
+// Ajout d'une transition
 void fa_add_transition(struct fa *self, size_t from, char alpha, size_t to) {
 	int n = alpha - 'a';
 	// On vérifie que la lettre fait bien partie de l'alphabet de l'automate
 	if (n < self->alpha_count) {
+		// Si il n'y a pas de transitions, initialisation de la liste chaînée
 		if (self->state_array[from][n].first == NULL) {
 			self->state_array[from][n].first =  malloc(sizeof(struct list_node));
 			self->state_array[from][n].first->value = to;
 			self->state_array[from][n].first->next = NULL;
 		}
+		// Sinon, on parcourt la liste
 		else {
 			fa_add_node_transition(self->state_array[from][n].first, to);
 		}
@@ -141,17 +126,20 @@ void fa_add_transition(struct fa *self, size_t from, char alpha, size_t to) {
 }
 
 void fa_add_node_transition(struct list_node *self, size_t to) {
+	// Si on est positionné sur le dernier élément de la liste, on ajoute la nouvelle transition
 	if (self->next == NULL) {
 		struct list_node *l = malloc(sizeof(struct list_node));
 		l->value = to;
 		l->next = NULL;
 		self->next = l;
 	}
+	// Parcourt de la liste
 	else {
 		fa_add_node_transition(self->next, to);
 	}
 }
 
+// Affichage d'un automate
 void fa_pretty_print(const struct fa *self, FILE *out) {
 	printf("Initial states:\n\t");
 	if (self->array_init.value != NULL) {
@@ -187,26 +175,47 @@ void fa_dot_print(const struct fa *self, FILE *out) {
 
 }
 
+// Suppression d'une transition
 void fa_remove_transition(struct fa *self, size_t from, char alpha, size_t to) {
 
 }
 
+// Suppression d'un état
 void fa_remove_state(struct fa *self, size_t state) {
 
 }
 
+// Compteur de transitions
 size_t fa_count_transitions(const struct fa *self) {
-
+	size_t count = 0;
+	// Parcourt du tableau 2D
+ 	for (int i = 0; i < self->state_count; ++i) {
+		for (int j = 0; j < self->alpha_count; ++j) {
+			// Parcourt des listes chaînées
+			if (self->state_array[i][j].first != NULL) {
+				struct list_node *l = self->state_array[i][j].first;
+				++count;
+				while (l->next != NULL) {
+					l = l->next;
+					++count;
+				}
+			}
+		}
+	}
+	return count;
 }
 
+// Fonction établissant si l'automate est déterministe
 bool fa_is_deterministic(const struct fa *self) {
-
+	return true;
 }
 
+// Fonction établissant si l'automate est complet
 bool fa_is_complete(const struct fa *self) {
-
+	return true;
 }
 
+// Complétion d'un automate
 void fa_make_complete(struct fa *self) {
 
 }

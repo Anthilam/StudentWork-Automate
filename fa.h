@@ -5,7 +5,8 @@
 #include <stdbool.h>
 #include <assert.h>
 
-struct list{
+// Structure représentant une liste chaînée
+struct list {
 	struct list_node *first;
 };
 
@@ -14,58 +15,66 @@ struct list_node {
 	struct list_node *next;
 };
 
+// Structure représentant un tableau dynamique
 struct dyn_tab{
 	int *value;
 	size_t used;
 	size_t size;
 };
 
-/* Structure représentant l'automate, avec alpha_count la taille de l'alphabet
-et state_count le nombre d'états de l'automate */
+// Structure représentant un automate
 struct fa {
-	size_t alpha_count;
-	size_t state_count;
-	struct list **state_array;
-	struct dyn_tab array_init;
-	struct dyn_tab array_final;
+	size_t alpha_count; // Nombre de lettres de l'alphabet
+	size_t state_count; // Nombre d'états
+	struct list **state_array; // Tableau 2D états/alphabet
+	struct dyn_tab array_init; // Tableau des états initiaux
+	struct dyn_tab array_final; // Tableau des états finaux
 };
 
-// Creation d'un automate
+// Création d'un automate
 void fa_create(struct fa *self, size_t alpha_count, size_t state_count);
 
-// Creation d'une liste d'etat uniquement appele par fa_create
+// Création d'une liste d'états
 void fa_create_state_list(struct fa *self);
 
 // Destruction d'un automate
 void fa_destroy(struct fa *self);
 
-// Destruction d'une liste d'etat
+// Destruction d'une liste d'états
 void fa_destroy_state_list(struct fa *self);
 
 // Destruction d'une liste de transitions
 void fa_destroy_list_node(struct list_node *self);
 void fa_destroy_list(struct list *self);
 
-void fa_add_node_transition(struct list_node *self, size_t to);
-
+// Passage d'un état à état initial
 void fa_set_state_initial(struct fa *self, size_t state);
 
+// Passage d'un état à état final
 void fa_set_state_final(struct fa *self, size_t state);
 
+// Ajout d'une transition
 void fa_add_transition(struct fa *self, size_t from, char alpha, size_t to);
+void fa_add_node_transition(struct list_node *self, size_t to);
 
+// Affichage d'un automate
 void fa_pretty_print(const struct fa *self, FILE *out);
-
 void fa_dot_print(const struct fa *self, FILE *out);
 
+// Suppression d'une transition
 void fa_remove_transition(struct fa *self, size_t from, char alpha, size_t to);
 
+// Suppression d'un état
 void fa_remove_state(struct fa *self, size_t state);
 
+// Compteur de transitions
 size_t fa_count_transitions(const struct fa *self);
 
+// Fonction établissant si l'automate est déterministe
 bool fa_is_deterministic(const struct fa *self);
 
+// Fonction établissant si l'automate est complet
 bool fa_is_complete(const struct fa *self);
 
+// Complétion d'un automate
 void fa_make_complete(struct fa *self);
