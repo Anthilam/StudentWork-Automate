@@ -69,6 +69,13 @@ int main() {
 	fa_add_transition(&a1, 3, 'a', 3);
 	fa_add_transition(&a1, 3, 'b', 4);
 	
+	fa_add_transition(&a1, 3, 'a', 3);
+	fa_add_transition(&a1, 3, 'b', 4);
+	fa_add_transition(&a1, 3, 'a', 1);
+	fa_add_transition(&a1, 3, 'a', 5);
+	fa_add_transition(&a1, 3, 'a', 2);
+	fa_add_transition(&a1, 3, 'b', 2);
+	
 	fa_add_transition(&a1,4,'a',4);
 	
 	fa_set_state_initial(&a1,0);
