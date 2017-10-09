@@ -55,18 +55,26 @@ int main() {
 	//CU_initialize_registry();
 
 	struct fa a1;
-	fa_create(&a1, 4, 4);
+	fa_create(&a1, 2, 5);
 
 	fa_add_transition(&a1, 0, 'a', 1);
+	fa_add_transition(&a1, 0, 'a', 2);
+	fa_add_transition(&a1, 0, 'a', 3);
+	
 	fa_add_transition(&a1, 1, 'b', 3);
-	fa_add_transition(&a1, 2, 'c', 0);
-	fa_add_transition(&a1, 2, 'c', 1);
-	fa_add_transition(&a1, 3, 'c', 2);
+	
+	fa_add_transition(&a1, 2, 'a', 3);
+	fa_add_transition(&a1, 2, 'b', 4);
 
+	fa_add_transition(&a1, 3, 'a', 3);
+	fa_add_transition(&a1, 3, 'b', 4);
+	
+	fa_add_transition(&a1,4,'a',4);
+	
+	fa_set_state_initial(&a1,0);
 	fa_set_state_initial(&a1,1);
-	fa_set_state_initial(&a1, 3);
-	fa_set_state_final(&a1, 2);
-	fa_set_state_final(&a1, 0);
+	fa_set_state_final(&a1, 1);
+	fa_set_state_final(&a1, 4);
 
 	fa_pretty_print(&a1, stdout);
 
