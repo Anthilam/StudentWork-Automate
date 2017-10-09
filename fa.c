@@ -127,15 +127,26 @@ void fa_add_transition(struct fa *self, size_t from, char alpha, size_t to) {
 
 void fa_add_node_transition(struct list_node *self, size_t to) {
 	// Si on est positionné sur le dernier élément de la liste, on ajoute la nouvelle transition
-	if (self->next == NULL) {
-		struct list_node *l = malloc(sizeof(struct list_node));
-		l->value = to;
-		l->next = NULL;
-		self->next = l;
-	}
-	// Parcourt de la liste
-	else {
-		fa_add_node_transition(self->next, to);
+	if (self->value != to) {
+		if (self->next == NULL) {
+			struct list_node *l = malloc(sizeof(struct list_node));
+			l->value = to;
+			l->next = NULL;
+			self->next = l;
+		}
+		else if (self->value < to && self->next->value < to) {
+			fa_add_node_transition(self->next, to);
+		}
+		else if (self->value < to && self->next->value > to) {
+			struct list_node *l = malloc(sizeof(struct list_node));
+			l->value = to;
+			l->next = self->next;
+			self->next = l;
+		}
+		// Parcourt de la liste
+		else {
+			fa_add_node_transition(self->next, to);
+		}
 	}
 }
 
