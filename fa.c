@@ -218,7 +218,24 @@ size_t fa_count_transitions(const struct fa *self) {
 
 // Fonction établissant si l'automate est déterministe
 bool fa_is_deterministic(const struct fa *self) {
-	return true;
+	int i=0,j=0;
+	bool res=true;
+	if(self->array_init.used != 1){
+		return false;
+	}
+	while(i<self->state_count && res){
+		while(j<self->alpha_count && res){
+			if(self->state_array[i][j].first != NULL){
+			 	if(self->state_array[i][j].first->next!=NULL){
+			 		res = false;
+			 	}
+			}
+			j++;
+		}
+		i++;
+	}
+	
+	return res;
 }
 
 // Fonction établissant si l'automate est complet
