@@ -60,24 +60,24 @@ int main() {
 	fa_add_transition(&a1, 0, 'a', 1);
 	fa_add_transition(&a1, 0, 'a', 2);
 	fa_add_transition(&a1, 0, 'a', 3);
-	
+
 	fa_add_transition(&a1, 1, 'b', 3);
-	
+
 	fa_add_transition(&a1, 2, 'a', 3);
 	fa_add_transition(&a1, 2, 'b', 4);
 
 	fa_add_transition(&a1, 3, 'a', 3);
 	fa_add_transition(&a1, 3, 'b', 4);
-	
 	fa_add_transition(&a1, 3, 'a', 3);
 	fa_add_transition(&a1, 3, 'b', 4);
 	fa_add_transition(&a1, 3, 'a', 1);
+
 	fa_add_transition(&a1, 3, 'a', 5);
 	fa_add_transition(&a1, 3, 'a', 2);
 	fa_add_transition(&a1, 3, 'b', 2);
-	
-	fa_add_transition(&a1,4,'a',4);
-	
+
+	fa_add_transition(&a1, 4, 'a', 4);
+
 	fa_set_state_initial(&a1,0);
 	fa_set_state_initial(&a1,1);
 	fa_set_state_final(&a1, 1);
@@ -85,7 +85,17 @@ int main() {
 
 	fa_pretty_print(&a1, stdout);
 
-	printf("transitions nb = %lu\n", fa_count_transitions(&a1));
+	printf("transitions nb = %lu\n\n", fa_count_transitions(&a1));
+
+	fa_remove_state(&a1, 0);
+	fa_remove_state(&a1, 1);
+	fa_remove_state(&a1, 2);
+	fa_remove_state(&a1, 3);
+	fa_remove_state(&a1, 4);
+
+	fa_pretty_print(&a1, stdout);
+
+	printf("transitions nb = %lu\n\n", fa_count_transitions(&a1));
 
 	fa_destroy(&a1);
 }
