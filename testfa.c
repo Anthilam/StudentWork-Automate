@@ -50,7 +50,7 @@ int main() {
 	struct fa a1;
 	fa_create(&a1, 2, 5);
 
-	fa_add_transition(&a1, 0, 'a', 1); 
+	fa_add_transition(&a1, 0, 'a', 1);
 	fa_add_transition(&a1, 0, 'a', 2);
 	fa_add_transition(&a1, 0, 'a', 3);
 
@@ -91,33 +91,35 @@ int main() {
 	printf("transitions nb = %lu\n\n", fa_count_transitions(&a1));
 
 	fa_destroy(&a1);
-	
+
 	struct fa a2;
 	fa_create(&a2, 2, 5);
-	
-	fa_add_transition(&a2, 0, 'a', 1); 
+
+	fa_add_transition(&a2, 0, 'a', 1);
 	fa_add_transition(&a2, 0, 'b', 2);
-	
+
 	fa_add_transition(&a2, 1, 'b', 3);
-	
+
 	fa_add_transition(&a2, 2, 'a', 3);
 	fa_add_transition(&a2, 2, 'b', 4);
 
 	fa_add_transition(&a2, 3, 'a', 3);
 	fa_add_transition(&a2, 3, 'b', 4);
-	
+
 	fa_add_transition(&a2,4,'a',4);
-	
+
 	fa_set_state_initial(&a2,0);
-	
+
 	fa_set_state_final(&a2, 1);
 	fa_set_state_final(&a2, 4);
 
 	fa_pretty_print(&a2, stdout);
-	
+
 	if( fa_is_deterministic(&a2) ){
 		printf("l'automate est déterministe \n");
 	}else{
 		printf("l'automate est indéterministe \n");
 	}
+
+	fa_destroy(&a2);
 }
