@@ -97,7 +97,7 @@ int main() {
 
 	fa_add_transition(&a2, 0, 'a', 1);
 	fa_add_transition(&a2, 0, 'b', 2);
-
+	fa_add_transition(&a2, 1,'b',1);
 	fa_add_transition(&a2, 1, 'b', 3);
 
 	fa_add_transition(&a2, 2, 'a', 3);
