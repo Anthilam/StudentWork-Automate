@@ -358,9 +358,10 @@ bool fa_is_deterministic(const struct fa *self) {
 		return false;
 	}
 	while(i<self->state_count && res){
+		j=0;
 		while(j<self->alpha_count && res){
 			if(self->state_array[i][j].first != NULL){
-			 	if(self->state_array[i][j].first->next==NULL){
+			 	if(self->state_array[i][j].first->next != NULL){
 			 		res = false;
 			 	}
 			}
@@ -374,10 +375,26 @@ bool fa_is_deterministic(const struct fa *self) {
 
 // Fonction établissant si l'automate est complet
 bool fa_is_complete(const struct fa *self) {
-	return true;
+	int i=0,j=0;
+	bool res=true;
+	while(i<self->state_count && res){
+		j=0;
+		while(j<self->alpha_count && res){
+			if(self->state_array[i][j].first == NULL){
+		 		res = false;
+			}
+			j++;
+		}
+		i++;
+	}
+	return res;
 }
 
 // Complétion d'un automate
 void fa_make_complete(struct fa *self) {
-
+	if(fa_is_complete(self)){
+		return;
+	}else{
+		printf("fait des trucs");
+	}
 }
