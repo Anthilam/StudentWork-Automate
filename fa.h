@@ -63,6 +63,7 @@ void fa_dot_print(const struct fa *self, FILE *out);
 
 // Suppression d'une transition
 void fa_remove_transition(struct fa *self, size_t from, char alpha, size_t to);
+void fa_remove_node_transition(struct list_node *self, size_t to);
 
 // Suppression d'un état
 void fa_remove_state(struct fa *self, size_t state);

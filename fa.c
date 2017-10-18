@@ -6,8 +6,8 @@
 void fa_create(struct fa *self, size_t alpha_count, size_t state_count) {
 	self->alpha_count = alpha_count;
 	self->state_count = state_count;
-	self->array_init.value= NULL;
-	self->array_final.value=NULL;
+	self->array_init.value = NULL;
+	self->array_final.value = NULL;
 	fa_create_state_list(self);
 }
 
@@ -111,7 +111,7 @@ void fa_set_state_final(struct fa *self, size_t state) {
 void fa_add_transition(struct fa *self, size_t from, char alpha, size_t to) {
 	int n = alpha - 'a';
 	// On vérifie que la lettre fait bien partie de l'alphabet de l'automate
-	if (n < self->alpha_count) {
+	if (n < self->alpha_count && to < self->state_count) {
 		// Si il n'y a pas de transitions, initialisation de la liste chaînée
 		if (self->state_array[from][n].first == NULL) {
 			self->state_array[from][n].first =  malloc(sizeof(struct list_node));
@@ -120,13 +120,23 @@ void fa_add_transition(struct fa *self, size_t from, char alpha, size_t to) {
 		}
 		// Sinon, on parcourt la liste
 		else {
-			fa_add_node_transition(self->state_array[from][n].first, to);
+			// Si la valeur n'est pas déjà présente, on l'ajoute en conservant l'ordre
+			if (self->state_array[from][n].first->value != to) {
+				if (self->state_array[from][n].first->value > to) {
+					size_t to_tmp = self->state_array[from][n].first->value;
+					self->state_array[from][n].first->value = to;
+					fa_add_node_transition(self->state_array[from][n].first, to_tmp);
+				}
+				else {
+					fa_add_node_transition(self->state_array[from][n].first, to);
+				}
+			}
 		}
 	}
 }
 
 void fa_add_node_transition(struct list_node *self, size_t to) {
-	// Si on est positionné sur le dernier élément de la liste, on ajoute la nouvelle transition
+	// Si la valeur n'est pas déjà présente, on l'ajoute en conservant l'ordre
 	if (self->value != to) {
 		if (self->next == NULL) {
 			struct list_node *l = malloc(sizeof(struct list_node));
@@ -143,7 +153,6 @@ void fa_add_node_transition(struct list_node *self, size_t to) {
 			l->next = self->next;
 			self->next = l;
 		}
-		// Parcourt de la liste
 		else {
 			fa_add_node_transition(self->next, to);
 		}
@@ -188,12 +197,137 @@ void fa_dot_print(const struct fa *self, FILE *out) {
 
 // Suppression d'une transition
 void fa_remove_transition(struct fa *self, size_t from, char alpha, size_t to) {
+	int n = alpha - 'a';
+	// On vérifie que la lettre fait bien partie de l'alphabet de l'automate
+	if (n < self->alpha_count) {
+		if (self->state_array[from][n].first != NULL) {
+			if (self->state_array[from][n].first->value == to
+				&& self->state_array[from][n].first->next == NULL) {
+				free(self->state_array[from][n].first);
+				self->state_array[from][n].first = NULL;
+			}
+			else if (self->state_array[from][n].first->value == to
+				&& self->state_array[from][n].first->next != NULL) {
+				struct list_node *l = self->state_array[from][n].first->next;
+				free(self->state_array[from][n].first);
+				self->state_array[from][n].first = l;
+			}
+			else if (self->state_array[from][n].first->next != NULL){
+				fa_remove_node_transition(self->state_array[from][n].first, to);
+			}
+		}
+	}
+}
 
+void fa_remove_node_transition(struct list_node *self, size_t to) {
+	if (self->next->value == to && self->next->next == NULL) {
+		free(self->next);
+		self->next = NULL;
+	}
+	else if (self->next->value == to && self->next->next != NULL) {
+		struct list_node *l = self->next->next;
+		free(self->next);
+		self->next = l;
+	}
+	else if (self->next->next != NULL) {
+		fa_remove_node_transition(self->next, to);
+	}
 }
 
 // Suppression d'un état
 void fa_remove_state(struct fa *self, size_t state) {
+	if (state < self->state_count) {
+		// Suppression de toutes les transitions partant de l'état à supprimer
+		for (int i = 0; i < self->alpha_count; ++i) {
+			for (int j = 0; j <= self->state_count; ++j) {
+				fa_remove_transition(self, state, 'a'+i, j);
+			}
+		}
 
+		// Suppression de toutes les transitions allant vers l'état à supprimer
+		for (int i = 0; i < self->state_count; ++i) {
+			for (int j = 0; j < self->alpha_count; ++j) {
+				fa_remove_transition(self, i, 'a'+j, state);
+			}
+		}
+
+		// Suppression de l'état du tableau des états initiaux
+		int count = 0;
+		bool isUsed = false;
+		int *newInit = malloc(sizeof(int)*self->array_init.size);
+	 	for (int i = 0; i < self->array_init.used; ++i) {
+			if (self->array_init.value[i] != state) {
+				newInit[count] = self->array_init.value[i];
+				// On décrémente les états > à l'état supprimé
+				if (self->array_init.value[i] > state) {
+					--newInit[count];
+				}
+				++count;
+			}
+
+			if (self->array_init.value[i] == state) {
+				isUsed = true;
+			}
+		}
+		free(self->array_init.value);
+		self->array_init.value = newInit;
+		if (isUsed == true) {
+			--self->array_init.used;
+		}
+
+		// Suppression de l'état du tableau des états finaux
+		count = 0;
+		isUsed = false;
+		int *newFinal = malloc(sizeof(int)*self->array_final.size);
+		for (int i = 0; i < self->array_final.used; ++i) {
+			if (self->array_final.value[i] != state) {
+				newFinal[count] = self->array_final.value[i];
+				// On décrémente les états > à l'état supprimé
+				if (self->array_final.value[i] > state) {
+					--newFinal[count];
+				}
+				++count;
+			}
+
+			if (self->array_final.value[i] == state) {
+				isUsed = true;
+			}
+		}
+		free(self->array_final.value);
+		self->array_final.value = newFinal;
+		if (isUsed == true) {
+			--self->array_final.used;
+		}
+
+		// On supprime l'état puis on décale les états par rapport à l'état supprimé
+		free(self->state_array[state]);
+		for(int i = state+1; i < self->state_count; ++i) {
+			if (i != self->state_count) {
+				self->state_array[i-1] = self->state_array[i];
+			}
+		}
+
+		// On décrémente le nombre d'états
+		--self->state_count;
+
+		// On décale toutes les transitions
+		for (int i = 0; i < self->state_count; ++i) {
+			for (int j = 0; j < self->alpha_count; ++j) {
+				// On vérifie qu'il y a une liste de transitions existante
+				if (self->state_array[i][j].first != NULL) {
+					struct list_node *l = self->state_array[i][j].first;
+					// On boucle le décalage tant qu'on est pas au bout de la liste
+					while (l != NULL) {
+						// On décale seulement les valeurs > à l'état supprimé
+						if (l->value >= state) {
+							--l->value;
+						}
+						l = l->next;
+					}
+				}
+			}
+		}
+	}
 }
 
 // Compteur de transitions

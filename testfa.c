@@ -1,16 +1,11 @@
 // BOISSON Romain - GUY Timothée
 
 #include "fa.h"
-#include <CUnit/CUnit.h>
 
 // Test de la fonction fa_create
 void test_fa_create(void) {
 	struct fa a;
 	fa_create(&a, 4, 5);
-
-	CU_ASSERT_TRUE(a.alpha_count == 4);
-	CU_ASSERT_TRUE(a.state_count == 5);
-	CU_ASSERT_FALSE(a.state_array == NULL)
 
 	fa_destroy(&a);
 }
@@ -20,8 +15,6 @@ void test_fa_destroy(void) {
 	struct fa a;
 	fa_create(&a, 4, 5);
 	fa_destroy(&a);
-
-	CU_ASSERT_TRUE(a.state_array == NULL);
 }
 
 // Test de la fonction fa_set_state_initial
@@ -60,24 +53,24 @@ int main() {
 	fa_add_transition(&a1, 0, 'a', 1); 
 	fa_add_transition(&a1, 0, 'a', 2);
 	fa_add_transition(&a1, 0, 'a', 3);
-	
+
 	fa_add_transition(&a1, 1, 'b', 3);
-	
+
 	fa_add_transition(&a1, 2, 'a', 3);
 	fa_add_transition(&a1, 2, 'b', 4);
 
 	fa_add_transition(&a1, 3, 'a', 3);
 	fa_add_transition(&a1, 3, 'b', 4);
-	
 	fa_add_transition(&a1, 3, 'a', 3);
 	fa_add_transition(&a1, 3, 'b', 4);
 	fa_add_transition(&a1, 3, 'a', 1);
+
 	fa_add_transition(&a1, 3, 'a', 5);
 	fa_add_transition(&a1, 3, 'a', 2);
 	fa_add_transition(&a1, 3, 'b', 2);
-	
-	fa_add_transition(&a1,4,'a',4);
-	
+
+	fa_add_transition(&a1, 4, 'a', 4);
+
 	fa_set_state_initial(&a1,0);
 	fa_set_state_initial(&a1,1);
 	fa_set_state_final(&a1, 1);
@@ -85,7 +78,17 @@ int main() {
 
 	fa_pretty_print(&a1, stdout);
 
-	printf("transitions nb = %lu\n", fa_count_transitions(&a1));
+	printf("transitions nb = %lu\n\n", fa_count_transitions(&a1));
+
+	fa_remove_state(&a1, 0);
+	fa_remove_state(&a1, 1);
+	fa_remove_state(&a1, 2);
+	fa_remove_state(&a1, 3);
+	fa_remove_state(&a1, 4);
+
+	fa_pretty_print(&a1, stdout);
+
+	printf("transitions nb = %lu\n\n", fa_count_transitions(&a1));
 
 	fa_destroy(&a1);
 	
