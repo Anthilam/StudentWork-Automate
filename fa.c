@@ -360,7 +360,7 @@ bool fa_is_deterministic(const struct fa *self) {
 	while(i<self->state_count && res){
 		while(j<self->alpha_count && res){
 			if(self->state_array[i][j].first != NULL){
-			 	if(self->state_array[i][j].first->next!=NULL){
+			 	if(self->state_array[i][j].first->next==NULL){
 			 		res = false;
 			 	}
 			}
