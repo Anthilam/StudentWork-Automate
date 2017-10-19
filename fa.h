@@ -16,7 +16,7 @@ struct list_node {
 };
 
 // Structure représentant un tableau dynamique
-struct dyn_tab{
+struct dyn_tab {
 	int *value;
 	size_t used;
 	size_t size;
@@ -29,6 +29,13 @@ struct fa {
 	struct list **state_array; // Tableau 2D états/alphabet
 	struct dyn_tab array_init; // Tableau des états initiaux
 	struct dyn_tab array_final; // Tableau des états finaux
+};
+
+// Structure représentant un graphe orienté
+struct graph {
+	size_t state_count; // Nombre d'états
+	struct list *adjacent; // Tableau des listes d'adjacence des états
+	struct list *arc; // Tableau des arcs de chaque état
 };
 
 // Création d'un automate
@@ -79,3 +86,12 @@ bool fa_is_complete(const struct fa *self);
 
 // Complétion d'un automate
 void fa_make_complete(struct fa *self);
+
+// Fonction de parcours en profondeur d'un graphe
+void graph_depth_first_search(const struct graph *self, size_t state, bool *visited);
+
+// Fonction déterminant si un chemin existe entre deux états
+bool graph_has_path(const struct graph *self, size_t from, size_t to);
+
+// Fonction créant un graphe à partir d'un automate
+void graph_create_from_fa(struct graph *self, const struct fa *fa, bool inverted);
