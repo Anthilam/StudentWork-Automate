@@ -102,10 +102,7 @@ int main() {
 	fa_add_transition(&a2, 1, 'a', 2);
 
 	fa_add_transition(&a2, 2, 'a', 3);
-	fa_add_transition(&a2, 2, 'b', 4);
 
-	fa_add_transition(&a2, 3, 'a', 3);
-	fa_add_transition(&a2, 3, 'b', 4);
 
 	fa_add_transition(&a2,4,'a',4);
 	fa_add_transition(&a2,4,'b',2);
@@ -115,7 +112,7 @@ int main() {
 	fa_set_state_final(&a2, 4);
 
 
-
+	printf("a2 : \n");
 	fa_pretty_print(&a2, stdout);
 
 	if( fa_is_deterministic(&a2) ==true ){
@@ -131,6 +128,20 @@ int main() {
 	}
 
 	fa_make_complete(&a2);
+	printf("a2 : \n");
+	printf("apres make_complete \n");
+	fa_pretty_print(&a2, stdout);
 
+	if( fa_is_deterministic(&a2) ==true ){
+		printf("l'automate est déterministe \n");
+	}else{
+		printf("l'automate n'est pas déterministe \n");
+	}
+
+	if( fa_is_complete(&a2) ==true){
+		printf("l'automate est complet \n");
+	}else{
+		printf("l'automate n'est pas complet \n");
+	}
 	fa_destroy(&a2);
 }

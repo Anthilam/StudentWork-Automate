@@ -34,6 +34,7 @@ struct fa {
 // Création d'un automate
 void fa_create(struct fa *self, size_t alpha_count, size_t state_count);
 
+
 // Création d'une liste d'états
 void fa_create_state_list(struct fa *self);
 
