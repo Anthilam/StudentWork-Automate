@@ -394,7 +394,29 @@ bool fa_is_complete(const struct fa *self) {
 void fa_make_complete(struct fa *self) {
 	if(fa_is_complete(self)){
 		return;
-	}else{
-		printf("fait des trucs");
 	}
+	// creation d'une nouvelle automate possedant un etat supplementaire
+	// qui sera utilise comme "poubelle"
+	self->state_array = realloc(self->state_array,sizeof(struct list *)*self->state_count+1);
+	self->state_count++;
+	self->state_array[self->state_count-1] = malloc(sizeof(struct list*)*self->alpha_count);
+	int i=0,j;
+	for (int k=0;k<self->alpha_count;k++){
+		self->state_array[self->state_count-1][k].first=NULL;
+	}
+	while(i<self->state_count){
+		j=0;
+		while(j<self->alpha_count){
+			if(self->state_array[i][j].first == NULL){
+				fa_add_transition(self, i,'a'+j,self->state_count-1);
+			}
+			j++;
+		}
+		i++;
+	}
+
+
+	//printf("self : quoi? ");
+	//fa_pretty_print(self,stdout);
+
 }
