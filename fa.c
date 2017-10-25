@@ -59,52 +59,54 @@ void fa_destroy_list(struct list *self) {
 
 // Passage d'un état à état initial
 void fa_set_state_initial(struct fa *self, size_t state) {
-	// Si il n'y a pas d'état initial
-	if (self->array_init.value == NULL) {
+	if(self->array_init.value == NULL){
 		self->array_init.value = malloc(sizeof(int)*10);
 		self->array_init.used = 0;
 		self->array_init.size = 10;
 	}
 
-	// Si le tableau est rempli
-	if (self->array_init.used == self->array_init.size) {
-		// Création d'un tableau deux fois plus grand
+	if(self->array_init.used == self->array_init.size){
 		int tmp[self->array_init.size * 2];
-		// Copie des données dans le nouveau tableau
-		for (int i = 0; i < self->array_init.used; ++i) {
+		for(int i=0;i<self->array_init.used;i++){
 			tmp[i] = self->array_init.value[i];
 		}
 
-		self->array_init.value = tmp;
+		free(self->array_init.value);
+		self->array_init.value = malloc(sizeof(int)*self->array_init.size*2);
+		self->array_init.size = self->array_init.size*2;
+		for(int i=0;i<self->array_init.used;i++){
+			self->array_init.value[i] = tmp[i];
+		}
 	}
 
 	self->array_init.value[self->array_init.used] = state;
-	++self->array_init.used;
+	self->array_init.used++;
 }
 
 // Passage d'un état à état final
 void fa_set_state_final(struct fa *self, size_t state) {
-	// Si il n'y a pas d'état final
-	if (self->array_final.value == NULL) {
+	if(self->array_final.value == NULL){
 		self->array_final.value = malloc(sizeof(int)*10);
 		self->array_final.used = 0;
 		self->array_final.size = 10;
 	}
 
-	// Si le tableau est rempli
-	if (self->array_final.used == self->array_final.size) {
-		// Création d'un tableau deux fois plus grand
+	if(self->array_final.used == self->array_final.size){
 		int tmp[self->array_final.size * 2];
-		// Copie des données dans le nouveau tableau
-		for (int i = 0; i < self->array_final.used; ++i) {
+		for(int i=0;i<self->array_final.used;i++){
 			tmp[i] = self->array_final.value[i];
 		}
 
-		self->array_final.value = tmp;
+		free(self->array_final.value);
+		self->array_final.value = malloc(sizeof(int)*self->array_final.size*2);
+		self->array_final.size = self->array_final.size*2;
+		for(int i=0;i<self->array_final.used;i++){
+			self->array_final.value[i] = tmp[i];
+		}
 	}
 
 	self->array_final.value[self->array_final.used] = state;
-	++self->array_final.used;
+	self->array_final.used++;
 }
 
 // Ajout d'une transition
@@ -419,4 +421,28 @@ void fa_make_complete(struct fa *self) {
 	//printf("self : quoi? ");
 	//fa_pretty_print(self,stdout);
 
+}
+
+// Fonction de parcours en profondeur d'un graphe
+void graph_depth_first_search(const struct graph *self, size_t state, bool *visited) {
+	visited[state] = true;
+	struct list_node *l = self->adjacent[state].first;
+	while (l->next != NULL) {
+		if (!visited[l->value]) {
+			graph_depth_first_search(self, l->value, visited);
+		}
+		l = l->next;
+	}
+}
+
+// Fonction déterminant si un chemin existe entre deux états
+bool graph_has_path(const struct graph *self, size_t from, size_t to) {
+	struct list_node *l = self->adjacent[from].first;
+	while (l->next != NULL) {
+		if (l->value == to) {
+			return true;
+		}
+		l = l->next;
+	}
+	return false;
 }

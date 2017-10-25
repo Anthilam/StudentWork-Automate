@@ -80,6 +80,7 @@ int main() {
 
 	printf("transitions nb = %lu\n\n", fa_count_transitions(&a1));
 
+<<<<<<< HEAD
 	fa_remove_state(&a1, 0);
 	fa_remove_state(&a1, 1);
 	fa_remove_state(&a1, 2);
@@ -116,11 +117,15 @@ int main() {
 	fa_pretty_print(&a2, stdout);
 
 	if( fa_is_deterministic(&a2) ==true ){
+=======
+	if(fa_is_deterministic(&a1) ){
+>>>>>>> cd7635df55e7b7167bb22ce0d9b6cb3307ca7d35
 		printf("l'automate est déterministe \n");
 	}else{
 		printf("l'automate n'est pas déterministe \n");
 	}
 
+<<<<<<< HEAD
 	if( fa_is_complete(&a2) ==true){
 		printf("l'automate est complet \n");
 	}else{
@@ -144,4 +149,7 @@ int main() {
 		printf("l'automate n'est pas complet \n");
 	}
 	fa_destroy(&a2);
+=======
+	fa_destroy(&a1);
+>>>>>>> cd7635df55e7b7167bb22ce0d9b6cb3307ca7d35
 }
