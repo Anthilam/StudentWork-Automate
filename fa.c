@@ -415,8 +415,4 @@ void fa_make_complete(struct fa *self) {
 		i++;
 	}
 
-
-	//printf("self : quoi? ");
-	//fa_pretty_print(self,stdout);
-
 }
