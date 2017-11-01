@@ -1,0 +1,21 @@
+exemple arborescence par Jub
+
+ ____/test
+/		 	fa.cc
+|			graph.cc
+|____/src
+|
+|____/include
+|
+|____/bin
+|			fa_test.cc
+|____/vendor
+|			|
+|			|___/gtest
+|						|___/src
+|						|			gtest_all.cc
+|						|___/include
+|
+|Makefile
+
+Plutôt reprendre l'arborescence de biblialgo
