@@ -40,6 +40,9 @@ int main() {
 		printf("\nLe langage est non-vide\n");
 	}
 
+	fa_remove_non_co_accessible_states(&a1);
+	fa_pretty_print(&a1, stdout);
+
 	fa_destroy(&a1);
 	graph_destroy(&ga1);
 }

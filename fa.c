@@ -436,12 +436,25 @@ void graph_depth_first_search(const struct graph *self, size_t state, bool *visi
 
 // Fonction déterminant si un chemin existe entre deux états
 bool graph_has_path(const struct graph *self, size_t from, size_t to) {
-	struct list_node *l = self->adjacent[from].first;
-	while (l->next != NULL) {
-		if (l->value == to) {
-			return true;
+	if (from == to) {
+		return true;
+	}
+
+	struct list_node *l = self->arc[from].first;
+
+	while (l != NULL) {
+		// Si l'arc n'est pas une boucle de l'état sur lui-même
+		if (from != l->value) {
+			// Alors on effectue le parcourt
+			if (graph_has_path(self, l->value, to)) {
+				return true;
+			}
+
+			l = l->next;
 		}
-		l = l->next;
+		else {
+			l = l->next;
+		}
 	}
 	return false;
 }
@@ -679,4 +692,64 @@ bool fa_is_language_empty(const struct fa *self) {
 	}
 
 	return true;
+}
+
+// Suppression des états non-accessibles (accessible s'il existe un chemin partant d'un état initial et allant jusqu'à l'état voulu)
+void fa_remove_non_accessible_states(struct fa *self) {
+	struct graph g;
+	graph_create_from_fa(&g, self, false);
+
+	// Initialisation du tableau des états visités
+	bool visited[self->state_count];
+	for (int i = 0; i < self->state_count; ++i) {
+		visited[i] = false;
+	}
+
+	// On part de chaque état initial et on essaye d'atteindre chaque état
+	for (int i = 0; i < self->array_init.used; ++i) {
+		for (int j = 0; j < self->state_count; ++j) {
+				if (!visited[j]) {
+					visited[j] = graph_has_path(&g, self->array_init.value[i], j);
+				}
+		}
+	}
+
+	// Si un état n'a pas été visité on le supprime
+	for (int i = 0; i < self->state_count; ++i) {
+		if (!visited[i]) {
+			fa_remove_state(self, i);
+		}
+	}
+
+	graph_destroy(&g);
+}
+
+// Suppression des états non-co-accessibles (coaccessible s'il existe un chemin partant de l'état voulu et allant jusqu'à un état final)
+void fa_remove_non_co_accessible_states(struct fa *self) {
+	struct graph g;
+	graph_create_from_fa(&g, self, false);
+
+	// Initialisation du tableau des états visités
+	bool visited[self->state_count];
+	for (int i = 0; i < self->state_count; ++i) {
+		visited[i] = false;
+	}
+
+	// On part de chaque état et on essaye d'atteindre un état final
+	for (int i = 0; i < self->state_count; ++i) {
+		for (int j = 0; j < self->array_final.used; ++j) {
+				if (!visited[i]) {
+					visited[i] = graph_has_path(&g, i, self->array_final.value[j]);
+				}
+		}
+	}
+
+	// Si un état n'a pas été visité on le supprime
+	for (int i = 0; i < self->state_count; ++i) {
+		if (!visited[i]) {
+			fa_remove_state(self, i);
+		}
+	}
+
+	graph_destroy(&g);
 }

@@ -4,10 +4,10 @@ PROGS=testfa
 all: $(PROGS)
 
 testfa: fa.o testfa.o
-	gcc -g -Wall -std=c99 -o testfa $^ -lcunit
+	gcc -g -Wall -std=c99 -o testfa $^
 
 testfa.o: testfa.c fa.h
-	gcc $(CFLAGS) testfa.o $< -lcunit
+	gcc $(CFLAGS) testfa.o $<
 
 fa.o: fa.c
 	gcc $(CFLAGS) fa.o $<

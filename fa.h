@@ -112,3 +112,9 @@ void graph_pretty_print(const struct graph *self, FILE *out);
 
 // Fonction vérifiant si un langage est vide
 bool fa_is_language_empty(const struct fa *self);
+
+// Suppression des états non-accessibles
+void fa_remove_non_accessible_states(struct fa *self);
+
+// Suppression des états non-co-accessibles
+void fa_remove_non_co_accessible_states(struct fa *self);
