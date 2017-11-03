@@ -3,8 +3,7 @@
 #include "fa.h"
 
 int main() {
-
-	struct fa a1;
+	/*struct fa a1;
 	fa_create(&a1, 2, 5);
 
 	fa_add_transition(&a1, 0, 'a', 1);
@@ -44,5 +43,37 @@ int main() {
 	fa_pretty_print(&a1, stdout);
 
 	fa_destroy(&a1);
-	graph_destroy(&ga1);
+	graph_destroy(&ga1);*/
+
+	struct fa A;
+	fa_create(&A, 2, 3);
+
+	fa_add_transition(&A, 0, 'a', 1);
+	fa_add_transition(&A, 1, 'a', 0);
+	fa_add_transition(&A, 1, 'b', 2);
+	fa_add_transition(&A, 2, 'b', 2);
+
+	fa_set_state_initial(&A, 0);
+	fa_set_state_final(&A, 2);
+
+	struct fa B;
+	fa_create(&B, 2, 3);
+
+	fa_add_transition(&B, 0, 'a', 1);
+	fa_add_transition(&B, 1, 'a', 2);
+	fa_add_transition(&B, 1, 'b', 2);
+	fa_add_transition(&B, 2, 'b', 1);
+
+	fa_set_state_initial(&B, 0);
+	fa_set_state_initial(&B, 1);
+	fa_set_state_final(&B, 2);
+
+	struct fa C;
+	fa_create_product(&C, &A, &B);
+
+	fa_pretty_print(&C, stdout);
+
+	fa_destroy(&A);
+	fa_destroy(&B);
+	fa_destroy(&C);
 }

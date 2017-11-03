@@ -90,6 +90,7 @@ void fa_make_complete(struct fa *self);
 // Fonction de parcours en profondeur d'un graphe
 void graph_depth_first_search(const struct graph *self, size_t state, bool *visited);
 
+bool graph_has_path_with_prev(const struct graph *self, size_t from, size_t to, size_t prev);
 // Fonction déterminant si un chemin existe entre deux états
 bool graph_has_path(const struct graph *self, size_t from, size_t to);
 
@@ -118,3 +119,12 @@ void fa_remove_non_accessible_states(struct fa *self);
 
 // Suppression des états non-co-accessibles
 void fa_remove_non_co_accessible_states(struct fa *self);
+
+// Fonction vérifiant si un état est initial ou non
+bool is_initial(const struct fa *self, int state);
+
+// Fonction vérifiant si un état est final ou non
+bool is_final(const struct fa *self, int state);
+
+// Produit de deux automates
+void fa_create_product(struct fa *self, const struct fa *lhs, const struct fa *rhs);

@@ -434,8 +434,7 @@ void graph_depth_first_search(const struct graph *self, size_t state, bool *visi
 	}
 }
 
-// Fonction déterminant si un chemin existe entre deux états
-bool graph_has_path(const struct graph *self, size_t from, size_t to) {
+bool graph_has_path_with_prev(const struct graph *self, size_t from, size_t to, size_t prev) {
 	if (from == to) {
 		return true;
 	}
@@ -444,9 +443,9 @@ bool graph_has_path(const struct graph *self, size_t from, size_t to) {
 
 	while (l != NULL) {
 		// Si l'arc n'est pas une boucle de l'état sur lui-même
-		if (from != l->value) {
+		if (from != l->value && l->value != prev) {
 			// Alors on effectue le parcourt
-			if (graph_has_path(self, l->value, to)) {
+			if (graph_has_path_with_prev(self, l->value, to, from)) {
 				return true;
 			}
 
@@ -457,6 +456,11 @@ bool graph_has_path(const struct graph *self, size_t from, size_t to) {
 		}
 	}
 	return false;
+}
+
+// Fonction déterminant si un chemin existe entre deux états
+bool graph_has_path(const struct graph *self, size_t from, size_t to) {
+	return graph_has_path_with_prev(self, from, to, 0);
 }
 
 // Ajout d'un adjacent
@@ -714,10 +718,12 @@ void fa_remove_non_accessible_states(struct fa *self) {
 		}
 	}
 
+	int count = 0;
 	// Si un état n'a pas été visité on le supprime
 	for (int i = 0; i < self->state_count; ++i) {
 		if (!visited[i]) {
-			fa_remove_state(self, i);
+			fa_remove_state(self, i-count);
+			++count;
 		}
 	}
 
@@ -744,12 +750,87 @@ void fa_remove_non_co_accessible_states(struct fa *self) {
 		}
 	}
 
+	int count = 0;
 	// Si un état n'a pas été visité on le supprime
 	for (int i = 0; i < self->state_count; ++i) {
 		if (!visited[i]) {
-			fa_remove_state(self, i);
+			fa_remove_state(self, i-count);
+			++count;
 		}
 	}
 
 	graph_destroy(&g);
+}
+
+// Fonction vérifiant si un état est initial ou non
+bool is_initial(const struct fa *self, int state) {
+	for (int i = 0; i < self->array_init.used; ++i) {
+		if (state == self->array_init.value[i]) {
+			return true;
+		}
+	}
+	return false;
+}
+
+// Fonction vérifiant si un état est final ou non
+bool is_final(const struct fa *self, int state) {
+	for (int i = 0; i < self->array_final.used; ++i) {
+		if (state == self->array_final.value[i]) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/* Produit de deux automates
+Soit P = hR, A, F, J, Ui l’automate défini par :
+– les états de P sont des paires d’états formées d’un état de A et d’un état de A′
+– l’ensemble J des états initiaux est formé des paires (p, p′), où p est initial dans A et p′ est initial dans A′
+– pour tout état (p, p′), pour toute lettre a, s’il y a une transition (p, a, q) dans A et une transition (p′, a, q′) dans A′, il y a un état (q, q′) dans P et une transition de (p, p′) à (q, q′) étiquetée par a
+– un état (p, p′) est terminal si et seulement si les états p et p′ sont terminaux
+*/
+void fa_create_product(struct fa *self, const struct fa *lhs, const struct fa *rhs) {
+	// Compteur d'états de res
+	int counter = 0;
+
+	// Création de l'automate, en prenant la taille d'alphabet la plus grande
+	fa_create(self, lhs->alpha_count&rhs->alpha_count, lhs->state_count*rhs->state_count);
+
+	counter = 0;
+	// Pour tout état de lhs
+	for (int i = 0; i < lhs->state_count; ++i) {
+		// Pour tout état de rhs
+		for (int j = 0; j < rhs->state_count; ++j) {
+			// Si les deux états sont initiaux
+			if (is_initial(lhs, i) && is_initial(rhs, j)) {
+				fa_set_state_initial(self, counter);
+			}
+			// Si les deux états sont finaux
+			else if (is_final(lhs, i) && is_final(rhs, j)) {
+				fa_set_state_final(self, counter);
+			}
+
+			// Pour chaque lettre de l'alphabet
+			for (int k = 0; k < self->alpha_count; ++k) {
+				// On créé les transitions entre chaque états
+				struct list_node *l1 = lhs->state_array[i][k].first;
+
+				while (l1 != NULL) {
+					struct list_node *l2 = rhs->state_array[j][k].first;
+
+					while (l2 != NULL) {
+						fa_add_transition(self, counter, 'a'+k, l1->value*rhs->state_count+l2->value);
+
+						l2 = l2->next;
+					}
+
+					l1 = l1->next;
+				}
+			}
+
+			++counter;
+		}
+	}
+
+	fa_remove_non_accessible_states(self);
 }
