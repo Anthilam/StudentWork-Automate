@@ -128,3 +128,6 @@ bool is_final(const struct fa *self, int state);
 
 // Produit de deux automates
 void fa_create_product(struct fa *self, const struct fa *lhs, const struct fa *rhs);
+
+// Détermine si l'intersection entre deux automates est vide
+bool fa_has_empty_intersection(const struct fa *lhs, const struct fa *rhs);
