@@ -57,8 +57,24 @@ void fa_destroy_list(struct list *self) {
 	self->first = NULL;
 }
 
+// Regarde si l'élement est dans le tableau
+bool value_is_present(struct dyn_tab tab,size_t value){
+	if(tab.value == NULL){
+		return false;
+	}
+	for(int i=0;i<tab.used;i++){
+		if(value == tab.value[i]){
+			return true;
+		}
+	}
+	return false;
+}
+
 // Passage d'un état à état initial
 void fa_set_state_initial(struct fa *self, size_t state) {
+	if(value_is_present(self->array_init,state) || state > self->state_count){
+		return;
+	}
 	if(self->array_init.value == NULL){
 		self->array_init.value = malloc(sizeof(int)*10);
 		self->array_init.used = 0;
@@ -67,10 +83,9 @@ void fa_set_state_initial(struct fa *self, size_t state) {
 
 	if(self->array_init.used == self->array_init.size){
 		int tmp[self->array_init.size * 2];
-		for(int i=0;i<self->array_init.used;i++){
+		for(int i=0; i<self->array_init.used; i++){
 			tmp[i] = self->array_init.value[i];
 		}
-
 		free(self->array_init.value);
 		self->array_init.value = malloc(sizeof(int)*self->array_init.size*2);
 		self->array_init.size = self->array_init.size*2;
@@ -85,6 +100,9 @@ void fa_set_state_initial(struct fa *self, size_t state) {
 
 // Passage d'un état à état final
 void fa_set_state_final(struct fa *self, size_t state) {
+	if(value_is_present(self->array_final,state) || state > self->state_count){
+		return;
+	}
 	if(self->array_final.value == NULL){
 		self->array_final.value = malloc(sizeof(int)*10);
 		self->array_final.used = 0;
@@ -401,7 +419,7 @@ void fa_make_complete(struct fa *self) {
 	// qui sera utilise comme "poubelle"
 	self->state_array = realloc(self->state_array,sizeof(struct list *)*(self->state_count+1));
 	self->state_count++;
-	self->state_array[self->state_count-1] = malloc(sizeof(struct list*)*self->alpha_count);
+	self->state_array[self->state_count-1] = malloc(sizeof(struct list)*self->alpha_count);
 	int i=0,j;
 	for (int k=0;k<self->alpha_count;k++){
 		self->state_array[self->state_count-1][k].first=NULL;
@@ -416,7 +434,6 @@ void fa_make_complete(struct fa *self) {
 		}
 		i++;
 	}
-
 }
 
 // Fonction de parcours en profondeur d'un graphe
