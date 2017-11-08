@@ -439,23 +439,415 @@ void fa_make_complete(struct fa *self) {
 // Fonction de parcours en profondeur d'un graphe
 void graph_depth_first_search(const struct graph *self, size_t state, bool *visited) {
 	visited[state] = true;
-	struct list_node *l = self->adjacent[state].first;
-	while (l->next != NULL) {
-		if (!visited[l->value]) {
-			graph_depth_first_search(self, l->value, visited);
+	if (self->adjacent[state].first != NULL) {
+		struct list_node *l = self->adjacent[state].first;
+
+		while (l != NULL) {
+			if (!visited[l->value]) {
+				graph_depth_first_search(self, l->value, visited);
+			}
+			l = l->next;
 		}
-		l = l->next;
 	}
+}
+
+bool graph_has_path_with_prev(const struct graph *self, size_t from, size_t to, size_t prev) {
+	if (from == to) {
+		return true;
+	}
+
+	struct list_node *l = self->arc[from].first;
+
+	while (l != NULL) {
+		// Si l'arc n'est pas une boucle de l'état sur lui-même
+		if (from != l->value && l->value != prev) {
+			// Alors on effectue le parcourt
+			if (graph_has_path_with_prev(self, l->value, to, from)) {
+				return true;
+			}
+
+			l = l->next;
+		}
+		else {
+			l = l->next;
+		}
+	}
+	return false;
 }
 
 // Fonction déterminant si un chemin existe entre deux états
 bool graph_has_path(const struct graph *self, size_t from, size_t to) {
-	struct list_node *l = self->adjacent[from].first;
-	while (l->next != NULL) {
-		if (l->value == to) {
+	return graph_has_path_with_prev(self, from, to, 0);
+}
+
+// Ajout d'un adjacent
+void graph_add_adjacent(struct graph *self, size_t from, size_t to) {
+	// On vérifie que la lettre fait bien partie de l'alphabet de l'automate
+	if (to < self->state_count) {
+		// Si il n'y a pas de transitions, initialisation de la liste chaînée
+		if (self->adjacent[from].first == NULL) {
+			self->adjacent[from].first =  malloc(sizeof(struct list_node));
+			self->adjacent[from].first->value = to;
+			self->adjacent[from].first->next = NULL;
+		}
+		// Sinon, on parcourt la liste
+		else {
+			// Si la valeur n'est pas déjà présente, on l'ajoute en conservant l'ordre
+			if (self->adjacent[from].first->value != to && to != from) {
+				if (self->adjacent[from].first->value > to) {
+					size_t to_tmp = self->adjacent[from].first->value;
+					self->adjacent[from].first->value = to;
+					graph_add_node_adjacent(self->adjacent[from].first, to_tmp);
+				}
+				else {
+					graph_add_node_adjacent(self->adjacent[from].first, to);
+				}
+			}
+		}
+	}
+}
+
+void graph_add_node_adjacent(struct list_node *self, size_t to) {
+	// Si la valeur n'est pas déjà présente, on l'ajoute en conservant l'ordre
+	if (self->value != to) {
+		if (self->next == NULL) {
+			struct list_node *l = malloc(sizeof(struct list_node));
+			l->value = to;
+			l->next = NULL;
+			self->next = l;
+		}
+		else if (self->value < to && self->next->value < to) {
+			graph_add_node_adjacent(self->next, to);
+		}
+		else if (self->value < to && self->next->value > to) {
+			struct list_node *l = malloc(sizeof(struct list_node));
+			l->value = to;
+			l->next = self->next;
+			self->next = l;
+		}
+		else {
+			graph_add_node_adjacent(self->next, to);
+		}
+	}
+}
+
+// Ajout d'un arc
+void graph_add_arc(struct graph *self, size_t from, size_t to) {
+	// On vérifie que la lettre fait bien partie de l'alphabet de l'automate
+	if (to < self->state_count) {
+		// Si il n'y a pas de transitions, initialisation de la liste chaînée
+		if (self->arc[from].first == NULL) {
+			self->arc[from].first =  malloc(sizeof(struct list_node));
+			self->arc[from].first->value = to;
+			self->arc[from].first->next = NULL;
+		}
+		// Sinon, on parcourt la liste
+		else {
+			// Si la valeur n'est pas déjà présente, on l'ajoute en conservant l'ordre
+			if (self->arc[from].first->value != to) {
+				if (self->arc[from].first->value > to) {
+					size_t to_tmp = self->arc[from].first->value;
+					self->arc[from].first->value = to;
+					graph_add_node_arc(self->arc[from].first, to_tmp);
+				}
+				else {
+					graph_add_node_arc(self->arc[from].first, to);
+				}
+			}
+		}
+	}
+}
+
+void graph_add_node_arc(struct list_node *self, size_t to) {
+	// Si la valeur n'est pas déjà présente, on l'ajoute en conservant l'ordre
+	if (self->value != to) {
+		if (self->next == NULL) {
+			struct list_node *l = malloc(sizeof(struct list_node));
+			l->value = to;
+			l->next = NULL;
+			self->next = l;
+		}
+		else if (self->value < to && self->next->value < to) {
+			graph_add_node_arc(self->next, to);
+		}
+		else if (self->value < to && self->next->value > to) {
+			struct list_node *l = malloc(sizeof(struct list_node));
+			l->value = to;
+			l->next = self->next;
+			self->next = l;
+		}
+		else {
+			graph_add_node_arc(self->next, to);
+		}
+	}
+}
+
+// Fonction créant un graphe à partir d'un automate
+void graph_create_from_fa(struct graph *self, const struct fa *fa, bool inverted) {
+	// Initialisation
+	self->state_count = fa->state_count;
+	self->adjacent = malloc(sizeof(struct list)*fa->state_count);
+	self->arc = malloc(sizeof(struct list)*fa->state_count);
+
+	for (int i = 0; i < fa->state_count; ++i) {
+		self->adjacent[i].first = NULL;
+		self->arc[i].first = NULL;
+	}
+
+	// Mise en place des adjacents et des arcs, grâce aux listes de transitions
+	for (int i = 0; i < fa->state_count; ++i) {
+		for (int j = 0; j < fa->alpha_count; ++j) {
+			struct list_node *l = fa->state_array[i][j].first;
+			if (l != NULL) {
+				// Première passe
+				graph_add_adjacent(self, i, l->value);
+				// Seconde passe
+				graph_add_adjacent(self, l->value, i);
+				// Mise en place des arcs en fonction de inverted
+				if (inverted) {
+					graph_add_arc(self, l->value, i);
+				}
+				else {
+					graph_add_arc(self, i, l->value);
+				}
+
+				// Si transitions multiples
+				while (l->next != NULL) {
+					l = l->next;
+					// Première passe
+					graph_add_adjacent(self, i, l->value);
+					// Seconde passe
+					graph_add_adjacent(self, l->value, i);
+					// Mise en place des arcs en fonction de inverted
+					if (inverted) {
+						graph_add_arc(self, l->value, i);
+					}
+					else {
+						graph_add_arc(self, i, l->value);
+					}
+				}
+			}
+		}
+	}
+
+	// Mise en place des arcs
+}
+
+// Destruction d'un graphe
+void graph_destroy(struct graph *self) {
+	for(int i = 0; i < self->state_count; ++i) {
+		// Libération de chaque liste contenu par le tableau
+		fa_destroy_list(&self->adjacent[i]);
+		fa_destroy_list(&self->arc[i]);
+	}
+	free(self->adjacent);
+	free(self->arc);
+}
+
+// Affichage d'un graphe
+void graph_pretty_print(const struct graph *self, FILE *out) {
+	printf("\nAdjacent:\n");
+	for (int i = 0; i < self->state_count; ++i) {
+		printf("\tFor state %d:\t", i);
+		if (self->adjacent[i].first != NULL) {
+			struct list_node *l = self->adjacent[i].first;
+			printf("%d ", l->value);
+			while (l->next != NULL) {
+				l = l->next;
+				printf("%d ", l->value);
+			}
+		}
+		printf("\n");
+	}
+	printf("\nArc:\n");
+	for (int i = 0; i < self->state_count; ++i) {
+		printf("\tFor state %d:\t", i);
+		if (self->arc[i].first != NULL) {
+			struct list_node *l = self->arc[i].first;
+			printf("%d ", l->value);
+			while (l->next != NULL) {
+				l = l->next;
+				printf("%d ", l->value);
+			}
+		}
+		printf("\n");
+	}
+}
+
+// Fonction vérifiant si un langage est vide
+bool fa_is_language_empty(const struct fa *self) {
+	// Vérification qu'il y a un nombre d'état suffisant ou qu'il y a des états initiaux et finaux
+	if (self->state_count == 0 || self->array_final.value == NULL || self->array_init.value == NULL) {
+		return true;
+	}
+	else {
+		// Initilisation du tableau des états visités
+		bool visited[self->state_count];
+		for (int i = 0; i < self->state_count; ++i) {
+			visited[i] = false;
+		}
+
+		// Création du graphe
+		struct graph g;
+		graph_create_from_fa(&g, self, false);
+		// Parcours en profondeur du graphe en partant d'un état initial à la fois
+		for (int j = 0; j < self->array_init.used; ++j) {
+			graph_depth_first_search(&g, self->array_init.value[j], visited);
+			// Après parcours, on vérifie si on a atteint un état final
+			for (int i = 0; i < self->array_final.used; ++i) {
+				// Si oui on détruit le graphe et on retourne faux
+				if (visited[self->array_final.value[i]] == true) {
+					graph_destroy(&g);
+					return false;
+				}
+			}
+
+			// Sinon on reset le tableau des états visités
+			for (int i = 0; i < self->state_count; ++i) {
+				visited[i] = false;
+			}
+		}
+
+		// Si le langage est vide on détruit le graphe puis on retourne vrai
+		graph_destroy(&g);
+	}
+
+	return true;
+}
+
+// Suppression des états non-accessibles (accessible s'il existe un chemin partant d'un état initial et allant jusqu'à l'état voulu)
+void fa_remove_non_accessible_states(struct fa *self) {
+	struct graph g;
+	graph_create_from_fa(&g, self, false);
+
+	// Initialisation du tableau des états visités
+	bool visited[self->state_count];
+	for (int i = 0; i < self->state_count; ++i) {
+		visited[i] = false;
+	}
+
+	// On part de chaque état initial et on essaye d'atteindre chaque état
+	for (int i = 0; i < self->array_init.used; ++i) {
+		for (int j = 0; j < self->state_count; ++j) {
+				if (!visited[j]) {
+					visited[j] = graph_has_path(&g, self->array_init.value[i], j);
+				}
+		}
+	}
+
+	int count = 0;
+	// Si un état n'a pas été visité on le supprime
+	for (int i = 0; i < self->state_count; ++i) {
+		if (!visited[i]) {
+			fa_remove_state(self, i-count);
+			++count;
+		}
+	}
+
+	graph_destroy(&g);
+}
+
+// Suppression des états non-co-accessibles (coaccessible s'il existe un chemin partant de l'état voulu et allant jusqu'à un état final)
+void fa_remove_non_co_accessible_states(struct fa *self) {
+	struct graph g;
+	graph_create_from_fa(&g, self, false);
+
+	// Initialisation du tableau des états visités
+	bool visited[self->state_count];
+	for (int i = 0; i < self->state_count; ++i) {
+		visited[i] = false;
+	}
+
+	// On part de chaque état et on essaye d'atteindre un état final
+	for (int i = 0; i < self->state_count; ++i) {
+		for (int j = 0; j < self->array_final.used; ++j) {
+				if (!visited[i]) {
+					visited[i] = graph_has_path(&g, i, self->array_final.value[j]);
+				}
+		}
+	}
+
+	int count = 0;
+	// Si un état n'a pas été visité on le supprime
+	for (int i = 0; i < self->state_count; ++i) {
+		if (!visited[i]) {
+			fa_remove_state(self, i-count);
+			++count;
+		}
+	}
+
+	graph_destroy(&g);
+}
+
+// Fonction vérifiant si un état est initial ou non
+bool is_initial(const struct fa *self, int state) {
+	for (int i = 0; i < self->array_init.used; ++i) {
+		if (state == self->array_init.value[i]) {
 			return true;
 		}
-		l = l->next;
 	}
 	return false;
+}
+
+// Fonction vérifiant si un état est final ou non
+bool is_final(const struct fa *self, int state) {
+	for (int i = 0; i < self->array_final.used; ++i) {
+		if (state == self->array_final.value[i]) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/* Produit de deux automates
+Soit P = hR, A, F, J, Ui l’automate défini par :
+– les états de P sont des paires d’états formées d’un état de A et d’un état de A′
+– l’ensemble J des états initiaux est formé des paires (p, p′), où p est initial dans A et p′ est initial dans A′
+– pour tout état (p, p′), pour toute lettre a, s’il y a une transition (p, a, q) dans A et une transition (p′, a, q′) dans A′, il y a un état (q, q′) dans P et une transition de (p, p′) à (q, q′) étiquetée par a
+– un état (p, p′) est terminal si et seulement si les états p et p′ sont terminaux
+*/
+void fa_create_product(struct fa *self, const struct fa *lhs, const struct fa *rhs) {
+	// Compteur d'états de res
+	int counter = 0;
+
+	// Création de l'automate, en prenant la taille d'alphabet la plus grande
+	fa_create(self, lhs->alpha_count&rhs->alpha_count, lhs->state_count*rhs->state_count);
+
+	counter = 0;
+	// Pour tout état de lhs
+	for (int i = 0; i < lhs->state_count; ++i) {
+		// Pour tout état de rhs
+		for (int j = 0; j < rhs->state_count; ++j) {
+			// Si les deux états sont initiaux
+			if (is_initial(lhs, i) && is_initial(rhs, j)) {
+				fa_set_state_initial(self, counter);
+			}
+			// Si les deux états sont finaux
+			else if (is_final(lhs, i) && is_final(rhs, j)) {
+				fa_set_state_final(self, counter);
+			}
+
+			// Pour chaque lettre de l'alphabet
+			for (int k = 0; k < self->alpha_count; ++k) {
+				// On créé les transitions entre chaque états
+				struct list_node *l1 = lhs->state_array[i][k].first;
+
+				while (l1 != NULL) {
+					struct list_node *l2 = rhs->state_array[j][k].first;
+
+					while (l2 != NULL) {
+						fa_add_transition(self, counter, 'a'+k, l1->value*rhs->state_count+l2->value);
+
+						l2 = l2->next;
+					}
+
+					l1 = l1->next;
+				}
+			}
+
+			++counter;
+		}
+	}
+
+	fa_remove_non_accessible_states(self);
 }

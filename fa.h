@@ -41,7 +41,6 @@ struct graph {
 // Création d'un automate
 void fa_create(struct fa *self, size_t alpha_count, size_t state_count);
 
-
 // Création d'une liste d'états
 void fa_create_state_list(struct fa *self);
 
@@ -91,8 +90,41 @@ void fa_make_complete(struct fa *self);
 // Fonction de parcours en profondeur d'un graphe
 void graph_depth_first_search(const struct graph *self, size_t state, bool *visited);
 
+bool graph_has_path_with_prev(const struct graph *self, size_t from, size_t to, size_t prev);
 // Fonction déterminant si un chemin existe entre deux états
 bool graph_has_path(const struct graph *self, size_t from, size_t to);
 
+// Ajout d'un adjacent
+void graph_add_adjacent(struct graph *self, size_t from, size_t to);
+void graph_add_node_adjacent(struct list_node *self, size_t to);
+
+// Ajout d'un arc
+void graph_add_arc(struct graph *self, size_t from, size_t to);
+void graph_add_node_arc(struct list_node *self, size_t to);
+
 // Fonction créant un graphe à partir d'un automate
 void graph_create_from_fa(struct graph *self, const struct fa *fa, bool inverted);
+
+// Destruction d'un graphe
+void graph_destroy(struct graph *self);
+
+// Affichage d'un graphe
+void graph_pretty_print(const struct graph *self, FILE *out);
+
+// Fonction vérifiant si un langage est vide
+bool fa_is_language_empty(const struct fa *self);
+
+// Suppression des états non-accessibles
+void fa_remove_non_accessible_states(struct fa *self);
+
+// Suppression des états non-co-accessibles
+void fa_remove_non_co_accessible_states(struct fa *self);
+
+// Fonction vérifiant si un état est initial ou non
+bool is_initial(const struct fa *self, int state);
+
+// Fonction vérifiant si un état est final ou non
+bool is_final(const struct fa *self, int state);
+
+// Produit de deux automates
+void fa_create_product(struct fa *self, const struct fa *lhs, const struct fa *rhs);
