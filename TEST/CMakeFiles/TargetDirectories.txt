@@ -1,4 +1,0 @@
-/home/compuderp/Documents/C/Automate/TEST/CMakeFiles/rebuild_cache.dir
-/home/compuderp/Documents/C/Automate/TEST/CMakeFiles/edit_cache.dir
-/home/compuderp/Documents/C/Automate/TEST/CMakeFiles/gtest_main.dir
-/home/compuderp/Documents/C/Automate/TEST/CMakeFiles/gtest.dir
