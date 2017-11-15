@@ -851,3 +851,15 @@ void fa_create_product(struct fa *self, const struct fa *lhs, const struct fa *r
 
 	fa_remove_non_accessible_states(self);
 }
+
+// Détermine si l'intersection entre deux automates est vide
+bool fa_has_empty_intersection(const struct fa *lhs, const struct fa *rhs) {
+	struct fa a;
+	fa_create_product(&a, lhs, rhs);
+
+	bool res = fa_is_language_empty(&a);
+
+	fa_destroy(&a);
+
+	return res;
+}

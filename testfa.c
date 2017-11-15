@@ -3,7 +3,8 @@
 #include "fa.h"
 
 int main() {
-	/*struct fa a1;
+	/*
+	struct fa a1;
 	fa_create(&a1, 2, 5);
 
 	fa_add_transition(&a1, 0, 'a', 1);
@@ -43,7 +44,8 @@ int main() {
 	fa_pretty_print(&a1, stdout);
 
 	fa_destroy(&a1);
-	graph_destroy(&ga1);*/
+	graph_destroy(&ga1);
+	*/
 
 	struct fa A;
 	fa_create(&A, 2, 3);
@@ -57,7 +59,7 @@ int main() {
 	fa_set_state_final(&A, 2);
 
 	struct fa B;
-	fa_create(&B, 2, 3);
+	fa_create(&B, 4, 3);
 
 	fa_add_transition(&B, 0, 'a', 1);
 	fa_add_transition(&B, 1, 'a', 2);
@@ -72,6 +74,13 @@ int main() {
 	fa_create_product(&C, &A, &B);
 
 	fa_pretty_print(&C, stdout);
+
+	if (fa_has_empty_intersection(&A, &B)) {
+		printf("L'intersection est vide\n");
+	}
+	else {
+		printf("L'intersection est non-vide\n");
+	}
 
 	fa_destroy(&A);
 	fa_destroy(&B);
