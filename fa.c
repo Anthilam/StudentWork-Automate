@@ -59,54 +59,72 @@ void fa_destroy_list(struct list *self) {
 
 // Passage d'un état à état initial
 void fa_set_state_initial(struct fa *self, size_t state) {
-	if(self->array_init.value == NULL){
+	if (self->array_init.value == NULL) {
 		self->array_init.value = malloc(sizeof(int)*10);
 		self->array_init.used = 0;
 		self->array_init.size = 10;
 	}
 
-	if(self->array_init.used == self->array_init.size){
-		int tmp[self->array_init.size * 2];
-		for(int i=0;i<self->array_init.used;i++){
-			tmp[i] = self->array_init.value[i];
-		}
-
-		free(self->array_init.value);
-		self->array_init.value = malloc(sizeof(int)*self->array_init.size*2);
-		self->array_init.size = self->array_init.size*2;
-		for(int i=0;i<self->array_init.used;i++){
-			self->array_init.value[i] = tmp[i];
+	bool ok = true;
+	for (int i = 0; i < self->array_init.used; ++i) {
+		if (self->array_init.value[i] == state) {
+			ok = false;
 		}
 	}
 
-	self->array_init.value[self->array_init.used] = state;
-	self->array_init.used++;
+	if (ok) {
+		if (self->array_init.used == self->array_init.size) {
+			int tmp[self->array_init.size * 2];
+			for (int i = 0; i < self->array_init.used; ++i) {
+				tmp[i] = self->array_init.value[i];
+			}
+
+			free(self->array_init.value);
+			self->array_init.value = malloc(sizeof(int)*self->array_init.size*2);
+			self->array_init.size = self->array_init.size*2;
+			for (int i = 0; i < self->array_init.used; ++i) {
+				self->array_init.value[i] = tmp[i];
+			}
+		}
+
+		self->array_init.value[self->array_init.used] = state;
+		++self->array_init.used;
+	}
 }
 
 // Passage d'un état à état final
 void fa_set_state_final(struct fa *self, size_t state) {
-	if(self->array_final.value == NULL){
+	if (self->array_final.value == NULL) {
 		self->array_final.value = malloc(sizeof(int)*10);
 		self->array_final.used = 0;
 		self->array_final.size = 10;
 	}
 
-	if(self->array_final.used == self->array_final.size){
-		int tmp[self->array_final.size * 2];
-		for(int i=0;i<self->array_final.used;i++){
-			tmp[i] = self->array_final.value[i];
-		}
-
-		free(self->array_final.value);
-		self->array_final.value = malloc(sizeof(int)*self->array_final.size*2);
-		self->array_final.size = self->array_final.size*2;
-		for(int i=0;i<self->array_final.used;i++){
-			self->array_final.value[i] = tmp[i];
+	bool ok = true;
+	for (int i = 0; i < self->array_final.used; ++i) {
+		if (self->array_final.value[i] == state) {
+			ok = false;
 		}
 	}
 
-	self->array_final.value[self->array_final.used] = state;
-	self->array_final.used++;
+	if (ok) {
+		if (self->array_final.used == self->array_final.size) {
+			int tmp[self->array_final.size * 2];
+			for (int i = 0; i < self->array_final.used; ++i) {
+				tmp[i] = self->array_final.value[i];
+			}
+
+			free(self->array_final.value);
+			self->array_final.value = malloc(sizeof(int)*self->array_final.size*2);
+			self->array_final.size = self->array_final.size*2;
+			for (int i = 0; i < self->array_final.used; ++i) {
+				self->array_final.value[i] = tmp[i];
+			}
+		}
+
+		self->array_final.value[self->array_final.used] = state;
+		++self->array_final.used;
+	}
 }
 
 // Ajout d'une transition
@@ -140,7 +158,10 @@ void fa_add_transition(struct fa *self, size_t from, char alpha, size_t to) {
 void fa_add_node_transition(struct list_node *self, size_t to) {
 	// Si la valeur n'est pas déjà présente, on l'ajoute en conservant l'ordre
 	if (self->value != to) {
-		if (self->next == NULL) {
+		if (self->value < 0) {
+			self->value = to;
+		}
+		else if (self->next == NULL) {
 			struct list_node *l = malloc(sizeof(struct list_node));
 			l->value = to;
 			l->next = NULL;
@@ -845,4 +866,209 @@ bool fa_has_empty_intersection(const struct fa *lhs, const struct fa *rhs) {
 	fa_destroy(&a);
 
 	return res;
+}
+
+// Fonction vérifiant qu'un ensemble d'états n'est pas déjà présents dans une liste d'ensembles d'états
+bool fa_look_in_det_states(struct list *det_states, struct list_node *l, int nbStates) {
+	/* Tableau de booléen représentant les états que l'on vérifie,
+	un état à true n'est pas présent dans la liste d'ensembles,
+	un état à false est présent dans la liste d'ensembles */
+	bool res[nbStates];
+	// Initialisation du tableau
+	for (int i = 0; i < nbStates; ++i) {
+		res[i] = false;
+	}
+
+	for (int i = 0; i < nbStates; ++i) {
+		struct list_node *det = det_states[i].first;
+		struct list_node *toAdd = l;
+
+		while (det != NULL && toAdd != NULL) {
+			// Les listes étant triées, on vérifie si deux valeurs à une même position sont différentes
+			if (det->value != toAdd->value) {
+				res[i] = true;
+			}
+
+			det = det->next;
+			toAdd = toAdd->next;
+
+			// Si on arrive à la fin d'une liste avant la fin de l'autre liste
+			if ((det != NULL && toAdd == NULL)
+					|| (det == NULL && toAdd != NULL)) {
+				res[i] = true;
+			}
+		}
+	}
+
+	// Si on a trouvé un état présent dans la liste d'ensemble, on retourne faux
+	for (int i = 0; i < nbStates; ++i) {
+		if (res[i] == false) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+// Fonction ajoutant un ensemble d'états dans une liste d'ensemble d'états
+void fa_add_to_det_states(struct list *det_states, struct list_node *l, int nbStates) {
+	struct list_node *current = l;
+	while (current != NULL) {
+		fa_add_node_transition(det_states[nbStates].first, current->value);
+		current = current->next;
+	}
+}
+
+// Fonction ajoutant un état dans un automate déterministe
+bool fa_add_deterministic_state(struct fa *self, const struct fa *nfa, struct list *det_states, struct list_node *l, int nbStates) {
+	// Vérification si l'ensemble d'états est présent ou non dans la liste d'ensembles d'états
+	bool addOk = fa_look_in_det_states(det_states, l, nbStates);
+
+	// Si l'ensemble d'états n'est pas déjà présent
+	if (addOk) {
+		// Ajout de l'ensemble d'états à la liste d'ensemble d'états
+		fa_add_to_det_states(det_states, l, nbStates);
+
+		// Ajout des ensembles d'états au tableau de déterminisation
+		struct list_node *current = det_states[nbStates].first;
+		while (current != NULL) {
+			for (int j = 0; j < nfa->alpha_count; ++j) {
+				struct list_node *l = nfa->state_array[current->value][j].first;
+				while (l != NULL) {
+					fa_add_transition(self, nbStates, 'a'+j, l->value);
+					l = l->next;
+				}
+			}
+
+			current = current->next;
+		}
+	}
+
+	// La fonction renvoie si un ajout a été fait ou non
+	return addOk;
+}
+
+// Déterminisation d'un automate
+void fa_create_deterministic(struct fa *self, const struct fa *nfa) {
+	/* Pour répresenter le tableau de déterminisation, on utilise self->state_array,
+	puis on effectue les bonnes correspondances à la fin pour obtenir l'automates
+	determinisé, toujours dans self->state_array */
+
+	// Variable contenant le nombre d'états maximum de l'automate déterminisé
+	int n = pow(2, nfa->state_count);
+	// Nombres d'états courant de l'automate déterminisé
+	int nbStates = 0;
+
+	// Allocation mémoire de l'automate déterminisé
+	fa_create(self, nfa->alpha_count, n);
+
+	// Initialisation du tableau de correspondance des états
+	struct list *det_states = malloc(sizeof(struct list)*n);
+	for (int i = 0; i < n; ++i) {
+		det_states[i].first = malloc(sizeof(struct list_node));
+		det_states[i].first->next = NULL;
+		det_states[i].first->value = -1;
+	}
+
+	// Ajout des états initiaux
+	for (int i = 0; i < nfa->array_init.used; ++i) {
+		int current = nfa->array_init.value[i];
+		det_states[i].first->value = current;
+
+		fa_set_state_initial(self, current);
+
+		for (int j = 0; j < nfa->alpha_count; ++j) {
+			struct list_node *l = nfa->state_array[current][j].first;
+			while (l != NULL) {
+				fa_add_transition(self, current, 'a'+j, l->value);
+				l = l->next;
+			}
+		}
+
+		++nbStates;
+	}
+
+	// Ajout des états suivants
+	bool run = true;
+	int count = 0;
+	while (run && count < n) {
+		bool test[nfa->alpha_count];
+		for (int i = 0; i < nfa->alpha_count; ++i) {
+			test[i] = fa_add_deterministic_state(self, nfa, det_states, self->state_array[count][i].first, nbStates);
+			if (test[i]) {
+				++nbStates;
+			}
+			// run passe à faux si fa_add_deterministic_state retourne faux pour toutes les transitions
+			run |= test[i];
+		}
+		++count;
+	}
+
+	/* Mise en place de la correspondance des états
+	Pour cela, on regarde le contenu du tableau de déterminisation, puis on regarde
+	dans la liste d'ensembles d'états la correspondance, et on change le contenu du tableau
+	par l'indice correspondant, sur le même principe que fa_look_in_det_states */
+	for (int i = 0; i < nbStates; ++i) {
+		for (int j = 0; j < nfa->alpha_count; ++j) {
+			bool res[nbStates];
+			for (int k = 0; k < nbStates; ++k) {
+				res[k] = true;
+			}
+
+			for (int k = 0; k < nbStates; ++k) {
+				struct list_node *det = det_states[k].first;
+				struct list_node *toAdd = self->state_array[i][j].first;
+
+				while (toAdd != NULL && det != NULL) {
+					if (det->value != toAdd->value) {
+						res[k] = false;
+						break;
+					}
+
+					det = det->next;
+					toAdd = toAdd->next;
+
+					if ((det == NULL && toAdd != NULL)
+					 		|| (det != NULL && toAdd == NULL)) {
+						res[k] = false;
+						break;
+					}
+				}
+			}
+
+			// Passage des ensembles d'états au bon indice correspondants
+			for (int k = 0; k < nbStates; ++k) {
+				if (res[k]) {
+					// Vérification de la présence d'un état final dans l'ensemble d'états
+					for (int z = 0; z < nfa->array_final.used; ++z) {
+						struct list_node *toAdd = self->state_array[i][j].first;
+						while (toAdd != NULL) {
+							// Ajout d'un état final si présence d'un dans l'ensemble d'états
+							if (toAdd->value == nfa->array_final.value[z]) {
+								fa_set_state_final(self, k);
+							}
+
+							toAdd = toAdd->next;
+						}
+					}
+
+					// On détruit l'ensemble d'états puis on ajout le bon indice correspondant
+ 					fa_destroy_list(&self->state_array[i][j]);
+					fa_add_transition(self, i, 'a'+j, k);
+				}
+			}
+
+		}
+	}
+
+	// Suppression des états inutiles
+	for (int i = n; i >= nbStates; --i) {
+		fa_remove_state(self, i);
+	}
+
+	// Libération mémoire du tableau de correspondance des états
+	for (int i = 0; i < n; ++i) {
+		fa_destroy_list_node(det_states[i].first);
+	}
+	free(det_states);
 }
