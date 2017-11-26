@@ -144,3 +144,10 @@ bool fa_add_deterministic_state(struct fa *self, const struct fa *nfa, struct li
 
 // Déterminisation d'un automate
 void fa_create_deterministic(struct fa *self, const struct fa *nfa);
+
+/* Fonction déterminant si un langage accepté par un automates
+est inclus dans un autre langage accepté par un autre automate, pour cela
+on déterminise les deux automates entrés, puis on calcule le complémentaire
+de B afin de calculer l'intersection de A et ^B, si celle-ci est vide,
+alors A est inclus dans B */
+bool fa_is_included(const struct fa *lhs, const struct fa *rhs);

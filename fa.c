@@ -1072,3 +1072,51 @@ void fa_create_deterministic(struct fa *self, const struct fa *nfa) {
 	}
 	free(det_states);
 }
+
+/* Fonction déterminant si un langage accepté par un automates
+est inclus dans un autre langage accepté par un autre automate, pour cela
+on déterminise les deux automates entrés, puis on calcule le complémentaire
+de B afin de calculer l'intersection de A et ^B, si celle-ci est vide,
+alors A est inclus dans B */
+bool fa_is_included(const struct fa *lhs, const struct fa *rhs) {
+	struct fa *A = malloc(sizeof(struct fa));
+	struct fa *B = malloc(sizeof(struct fa));
+
+	// On crée les automates déterministes corrspondants
+	fa_create_deterministic(A, lhs);
+	fa_create_deterministic(B, rhs);
+
+	// Création du complémentaire de B
+	// On complète l'automate B
+	fa_make_complete(B);
+
+	// On inverse les états finaux et non-finaux
+	bool is_final[B->state_count];
+	for (int i = 0; i < B->state_count; ++i) {
+		is_final[i] = false;
+		for (int j = 0; j < B->array_final.used; ++j) {
+			if (B->array_final.value[j] == i) {
+				is_final[i] = true;
+			}
+		}
+	}
+
+	free(B->array_final.value);
+	B->array_final.value = NULL;
+	for (int i = 0; i < B->state_count; ++i) {
+		if (!is_final[i]) {
+			fa_set_state_final(B, i);
+		}
+	}
+
+	// On calcule l'intersection entre l'automate A et le complémentaire de B
+	bool res = fa_has_empty_intersection(A, B);
+
+	// Libérations mémoire
+	fa_destroy(A);
+	fa_destroy(B);
+	free(A);
+	free(B);
+
+	return res;
+}

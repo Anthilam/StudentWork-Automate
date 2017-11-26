@@ -31,7 +31,7 @@ int main() {
 
 	*/
 
-	/*struct fa A;
+	struct fa A;
 	fa_create(&A, 2, 2);
 
 	fa_add_transition(&A, 0, 'a', 1);
@@ -59,12 +59,26 @@ int main() {
 	fa_pretty_print(&B, stdout);
 	fa_pretty_print(&C, stdout);
 
+	if (fa_is_included(&A, &A)) {
+		printf("\nL'automate est inclus dans l'autre automate\n");
+	}
+	else {
+		printf("\nL'automate n'est pas inclus dans l'autre automate\n");
+	}
+
+	if (fa_is_included(&A, &B)) {
+		printf("\nL'automate est inclus dans l'autre automate\n");
+	}
+	else {
+		printf("\nL'automate n'est pas inclus dans l'autre automate\n");
+	}
+
 	fa_destroy(&A);
 	fa_destroy(&B);
 	fa_destroy(&C);
-	*/
 
-	struct fa A;
+
+	/*struct fa A;
 	fa_create(&A, 2, 5);
 
 	fa_add_transition(&A, 0, 'b', 1);
@@ -98,4 +112,5 @@ int main() {
 
 	fa_destroy(&A);
 	fa_destroy(&A_det);
+	*/
 }
