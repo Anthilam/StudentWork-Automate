@@ -1,11 +1,13 @@
+// BOISSON Romain - GUY Timothée
+
 #ifndef FA_H
 #define FA_H
-// BOISSON Romain - GUY Timothée
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <math.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -137,6 +139,25 @@ void fa_create_product(struct fa *self, const struct fa *lhs, const struct fa *r
 
 // Détermine si l'intersection entre deux automates est vide
 bool fa_has_empty_intersection(const struct fa *lhs, const struct fa *rhs);
+
+// Fonction vérifiant qu'un ensemble d'états n'est pas déjà présents dans une liste d'ensembles d'états
+bool fa_look_in_det_states(struct list *det_states,  struct list_node *l, int nbStates);
+
+// Fonction ajoutant un ensemble d'états dans une liste d'ensemble d'états
+void fa_add_to_det_states(struct list *det_states, struct list_node *l, int nbStates);
+
+// Fonction ajoutant un état dans un automate déterministe
+bool fa_add_deterministic_state(struct fa *self, const struct fa *nfa, struct list *det_states, struct list_node *l, int nbStates);
+
+// Déterminisation d'un automate
+void fa_create_deterministic(struct fa *self, const struct fa *nfa);
+
+/* Fonction déterminant si un langage accepté par un automates
+est inclus dans un autre langage accepté par un autre automate, pour cela
+on déterminise les deux automates entrés, puis on calcule le complémentaire
+de B afin de calculer l'intersection de A et ^B, si celle-ci est vide,
+alors A est inclus dans B */
+bool fa_is_included(const struct fa *lhs, const struct fa *rhs);
 
 #ifdef __cplusplus
 }
