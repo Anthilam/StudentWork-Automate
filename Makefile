@@ -28,11 +28,15 @@ testfa: $(LIBDIR)/fa.o testfa.o
 testfa.o: testfa.c include/fa.h
 	gcc $(CFLAGS) testfa.o $<
 
+#coverage: test_fa.gcno
+#	gcov $<
+#test_fa.gcno: ./tests/test_fa.cc
+#	g++ -fprofile-arcs -ftest-coverage -Iinclude -Itests -Itests/include ./tests/test_fa.cc -lgcov
 
 clean:
 	rm -f *.o
 	rm -f $(LIBDIR)/*.o
-
+	rm -f test_fa.gcno
 mrproper: clean
 	rm -f testfa
 	rm -f libalgo.a

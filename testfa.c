@@ -85,4 +85,6 @@ int main() {
 	fa_destroy(&A);
 	fa_destroy(&B);
 	fa_destroy(&C);
+
+
 }
