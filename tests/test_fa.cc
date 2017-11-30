@@ -87,6 +87,11 @@ TEST(fa,addOneTransition){
 TEST(fa,addAllTransition){
   struct fa a1;
   fa_create(&a1,3,4);
+  fa_add_transition(&a1,0,'a',-3);
+  EXPECT_TRUE(fa_count_transitions(&a1)==0);
+  fa_add_transition(&a1,0,'g',3);
+  EXPECT_TRUE(fa_count_transitions(&a1)==0);
+  fa_add_transition(&a1,-1,'a',3);
   EXPECT_TRUE(fa_count_transitions(&a1)==0);
   for(size_t nbAlph=0;nbAlph<3;nbAlph++){
     for(size_t nbState=0;nbState<4;nbState++){
@@ -136,12 +141,19 @@ TEST(fa,removeAllTransition){
     }
     EXPECT_TRUE(fa_count_transitions(&a1)== 48-((nbAlph+1)*4*4) );
   }
+  fa_remove_transition(&a1,0,'a',-3);
+  EXPECT_TRUE(fa_count_transitions(&a1)==0);
+  fa_remove_transition(&a1,0,'g',3);
+  EXPECT_TRUE(fa_count_transitions(&a1)==0);
+  fa_remove_transition(&a1,-1,'a',3);
+  EXPECT_TRUE(fa_count_transitions(&a1)==0);
   fa_destroy(&a1);
 }
 
 TEST(fa,removeState){
   struct fa a1;
   fa_create(&a1,2,3);
+  EXPECT_TRUE(a1.state_count == 3);
   fa_remove_state(&a1,-3);
   EXPECT_TRUE(a1.state_count == 3);
   fa_remove_state(&a1,2);
