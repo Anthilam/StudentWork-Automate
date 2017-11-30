@@ -478,17 +478,29 @@ void fa_make_complete(struct fa *self) {
 
 // Fonction de parcours en profondeur d'un graphe
 void graph_depth_first_search(const struct graph *self, size_t state, bool *visited) {
-	visited[state] = true;
-	if (self->adjacent[state].first != NULL) {
-		struct list_node *l = self->adjacent[state].first;
+	if (state >= 0 && state < self->state_count) {
+		visited[state] = true;
+		if (self->adjacent[state].first != NULL) {
+			struct list_node *l = self->adjacent[state].first;
 
-		while (l != NULL) {
-			if (!visited[l->value]) {
-				graph_depth_first_search(self, l->value, visited);
+			while (l != NULL) {
+				if (!visited[l->value]) {
+					graph_depth_first_search(self, l->value, visited);
+				}
+				l = l->next;
 			}
-			l = l->next;
 		}
 	}
+}
+
+// Fonction déterminant si un chemin existe entre deux états
+bool graph_has_path(const struct graph *self, size_t from, size_t to) {
+	if (from >= 0 && from < self->state_count
+			&& to >= 0 && to < self->state_count) {
+		return graph_has_path_with_prev(self, from, to, 0);
+	}
+
+	return false;
 }
 
 bool graph_has_path_with_prev(const struct graph *self, size_t from, size_t to, size_t prev) {
@@ -515,15 +527,11 @@ bool graph_has_path_with_prev(const struct graph *self, size_t from, size_t to, 
 	return false;
 }
 
-// Fonction déterminant si un chemin existe entre deux états
-bool graph_has_path(const struct graph *self, size_t from, size_t to) {
-	return graph_has_path_with_prev(self, from, to, 0);
-}
-
 // Ajout d'un adjacent
 void graph_add_adjacent(struct graph *self, size_t from, size_t to) {
 	// On vérifie que la lettre fait bien partie de l'alphabet de l'automate
-	if (to < self->state_count) {
+	if (to >= 0 && to < self->state_count
+			&& from >= 0 && from < self->state_count) {
 		// Si il n'y a pas de transitions, initialisation de la liste chaînée
 		if (self->adjacent[from].first == NULL) {
 			self->adjacent[from].first =  malloc(sizeof(struct list_node));
@@ -574,7 +582,8 @@ void graph_add_node_adjacent(struct list_node *self, size_t to) {
 // Ajout d'un arc
 void graph_add_arc(struct graph *self, size_t from, size_t to) {
 	// On vérifie que la lettre fait bien partie de l'alphabet de l'automate
-	if (to < self->state_count) {
+	if (to >= 0 && to < self->state_count
+			&& from >= 0 && from < self->state_count) {
 		// Si il n'y a pas de transitions, initialisation de la liste chaînée
 		if (self->arc[from].first == NULL) {
 			self->arc[from].first =  malloc(sizeof(struct list_node));
@@ -821,9 +830,11 @@ void fa_remove_non_co_accessible_states(struct fa *self) {
 
 // Fonction vérifiant si un état est initial ou non
 bool is_initial(const struct fa *self, int state) {
-	for (int i = 0; i < self->array_init.used; ++i) {
-		if (state == self->array_init.value[i]) {
-			return true;
+	if (state >= 0 && state < self->state_count) {
+		for (int i = 0; i < self->array_init.used; ++i) {
+			if (state == self->array_init.value[i]) {
+				return true;
+			}
 		}
 	}
 	return false;
@@ -831,9 +842,11 @@ bool is_initial(const struct fa *self, int state) {
 
 // Fonction vérifiant si un état est final ou non
 bool is_final(const struct fa *self, int state) {
-	for (int i = 0; i < self->array_final.used; ++i) {
-		if (state == self->array_final.value[i]) {
-			return true;
+	if (state >= 0 && state < self->state_count) {
+		for (int i = 0; i < self->array_final.used; ++i) {
+			if (state == self->array_final.value[i]) {
+				return true;
+			}
 		}
 	}
 	return false;
