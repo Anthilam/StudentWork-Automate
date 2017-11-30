@@ -39,13 +39,9 @@ TEST(fa,createWrong){
   struct fa a1,a2,a3,a4;
   // Verification de la validite des arguments
   fa_create(&a1,2,-3);
-  fa_destroy(&a1);
   fa_create(&a2,-2,3);
-  fa_destroy(&a2);
   fa_create(&a3,0,3);
-  fa_destroy(&a3);
   fa_create(&a4,2,0);
-  fa_destroy(&a4);
 }
 
 TEST(fa,setInitiale){

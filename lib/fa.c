@@ -4,23 +4,26 @@
 
 // Création d'un automate
 void fa_create(struct fa *self, size_t alpha_count, size_t state_count) {
-	// Initialisation de la structure
-	self->alpha_count = alpha_count; // Nb lettres alphabets
-	self->state_count = state_count; // Nb d'états
+	// Vérification des arguments (transtypage pour négatif)
+	if ((int)alpha_count > 0 && (int)state_count > 0) {
+		// Initialisation de la structure
+		self->alpha_count = alpha_count; // Nb lettres alphabets
+		self->state_count = state_count; // Nb d'états
 
-	self->array_init.value = NULL; // Tableau d'états initiaux
-	self->array_init.size = 0;
-	self->array_init.used = 0;
+		self->array_init.value = NULL; // Tableau d'états initiaux
+		self->array_init.size = 0;
+		self->array_init.used = 0;
 
-	self->array_final.value = NULL; // Tableau d'états finaux
-	self->array_final.size = 0;
-	self->array_final.used = 0;
+		self->array_final.value = NULL; // Tableau d'états finaux
+		self->array_final.size = 0;
+		self->array_final.used = 0;
 
-	fa_create_state_list(self); // Liste des états/transitions
+		fa_create_state_list(self); // Liste des états/transitions
+	}
 }
 
 // Création de la liste états/transitions
-void fa_create_state_list(struct fa *self){
+void fa_create_state_list(struct fa *self) {
 	// Allocation mémoire du tableau de listes
 	struct list **l = malloc(sizeof(struct list *)*self->state_count);
 
@@ -239,18 +242,22 @@ void fa_remove_transition(struct fa *self, size_t from, char alpha, size_t to) {
 	if (n >= 0 && n < self->alpha_count
 		&& to >= 0 && to < self->state_count
 		&& from >= 0 && from < self->state_count) {
+		// Si la liste n'est pas vide
 		if (self->state_array[from][n].first != NULL) {
+			// Si il n'y a qu'une transition dans la liste
 			if (self->state_array[from][n].first->value == to
 				&& self->state_array[from][n].first->next == NULL) {
 				free(self->state_array[from][n].first);
 				self->state_array[from][n].first = NULL;
 			}
+			// Si la transition à enlever est la première de la liste
 			else if (self->state_array[from][n].first->value == to
 				&& self->state_array[from][n].first->next != NULL) {
 				struct list_node *l = self->state_array[from][n].first->next;
 				free(self->state_array[from][n].first);
 				self->state_array[from][n].first = l;
 			}
+			// Si la transition est plus loin dans la liste
 			else if (self->state_array[from][n].first->next != NULL){
 				fa_remove_node_transition(self->state_array[from][n].first, to);
 			}
@@ -258,16 +265,20 @@ void fa_remove_transition(struct fa *self, size_t from, char alpha, size_t to) {
 	}
 }
 
+// Suppression d'une transition (parcours interne d'une liste)
 void fa_remove_node_transition(struct list_node *self, size_t to) {
+	// Si la transition à enlever est la dernière de la liste
 	if (self->next->value == to && self->next->next == NULL) {
 		free(self->next);
 		self->next = NULL;
 	}
+	// Si la transition à enlever est "au milieu" de la liste
 	else if (self->next->value == to && self->next->next != NULL) {
 		struct list_node *l = self->next->next;
 		free(self->next);
 		self->next = l;
 	}
+	// Si la transition est plus dans la liste
 	else if (self->next->next != NULL) {
 		fa_remove_node_transition(self->next, to);
 	}
@@ -275,7 +286,7 @@ void fa_remove_node_transition(struct list_node *self, size_t to) {
 
 // Suppression d'un état
 void fa_remove_state(struct fa *self, size_t state) {
-	if (state < self->state_count) {
+	if (state < self->state_count && state >= 0) {
 		// Suppression de toutes les transitions partant de l'état à supprimer
 		for (int i = 0; i < self->alpha_count; ++i) {
 			for (int j = 0; j <= self->state_count; ++j) {
@@ -391,16 +402,19 @@ size_t fa_count_transitions(const struct fa *self) {
 
 // Fonction établissant si l'automate est déterministe
 bool fa_is_deterministic(const struct fa *self) {
-	int i=0,j=0;
-	bool res=true;
-	if(self->array_init.used != 1){
+	int i = 0;
+	int j = 0;
+	bool res = true;
+
+	if (self->array_init.used != 1) {
 		return false;
 	}
-	while(i<self->state_count && res){
-		j=0;
-		while(j<self->alpha_count && res){
-			if(self->state_array[i][j].first != NULL){
-			 	if(self->state_array[i][j].first->next != NULL){
+
+	while (i < self->state_count && res) {
+		j = 0;
+		while (j < self->alpha_count && res) {
+			if (self->state_array[i][j].first != NULL) {
+			 	if (self->state_array[i][j].first->next != NULL) {
 			 		res = false;
 			 	}
 			}
@@ -414,46 +428,52 @@ bool fa_is_deterministic(const struct fa *self) {
 
 // Fonction établissant si l'automate est complet
 bool fa_is_complete(const struct fa *self) {
-	int i=0,j=0;
-	bool res=true;
-	while(i<self->state_count && res){
-		j=0;
-		while(j<self->alpha_count && res){
-			if(self->state_array[i][j].first == NULL){
+	int i = 0;
+	int j = 0;
+	bool res = true;
+	while (i < self->state_count && res) {
+		j = 0;
+		while (j < self->alpha_count && res) {
+			if (self->state_array[i][j].first == NULL) {
 		 		res = false;
 			}
 			j++;
 		}
 		i++;
 	}
+
 	return res;
 }
 
 // Complétion d'un automate
 void fa_make_complete(struct fa *self) {
-	if(fa_is_complete(self)){
-		return;
-	}
-	// creation d'une nouvelle automate possedant un etat supplementaire
-	// qui sera utilise comme "poubelle"
-	self->state_array = realloc(self->state_array,sizeof(struct list *)*(self->state_count+1));
-	self->state_count++;
-	self->state_array[self->state_count-1] = malloc(sizeof(struct list*)*self->alpha_count);
-	int i=0,j;
-	for (int k=0;k<self->alpha_count;k++){
-		self->state_array[self->state_count-1][k].first=NULL;
-	}
-	while(i<self->state_count){
-		j=0;
-		while(j<self->alpha_count){
-			if(self->state_array[i][j].first == NULL){
-				fa_add_transition(self, i,'a'+j,self->state_count-1);
-			}
-			j++;
-		}
-		i++;
-	}
+	if (!fa_is_complete(self)) {
+		// creation d'une nouvelle automate possedant un etat supplementaire
+		// qui sera utilise comme "poubelle"
+		self->state_array = realloc(self->state_array,sizeof(struct list *)*(self->state_count+1));
 
+		self->state_count++;
+
+		self->state_array[self->state_count-1] = malloc(sizeof(struct list*)*self->alpha_count);
+
+		int i = 0;
+		int j;
+
+		for (int k = 0; k < self->alpha_count; ++k) {
+			self->state_array[self->state_count-1][k].first = NULL;
+		}
+
+		while (i < self->state_count) {
+			j = 0;
+			while (j < self->alpha_count) {
+				if (self->state_array[i][j].first == NULL) {
+					fa_add_transition(self, i,'a'+j, self->state_count-1);
+				}
+				j++;
+			}
+			i++;
+		}
+	}
 }
 
 // Fonction de parcours en profondeur d'un graphe
