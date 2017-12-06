@@ -1,5 +1,6 @@
 CFLAGS=-c -Wall -std=c99 -Iinclude -g -o
 
+MATH=-lm
 CXX = c++
 CXXFLAGS = -Wall -O2 -g -Iinclude -Itests -Itests/include -fprofile-arcs -ftest-coverage
 
@@ -23,10 +24,10 @@ run_tests: $(RUNTESTS_OBJ) libfa.a
 	$(CXX) $(CXXFLAGS) -o $@ $(RUNTESTS_OBJ) -L. -lfa -lpthread --coverage
 
 testfa: $(LIBDIR)/fa.o testfa.o
-	gcc -g -Wall -std=c99 -o testfa $^
+	gcc -g -Wall -std=c99 -o testfa $^ $(MATH)
 
 testfa.o: testfa.c include/fa.h
-	gcc $(CFLAGS) testfa.o $<
+	gcc $(CFLAGS) testfa.o $< $(MATH)
 
 coverage:
 	./lcov/bin/lcov -c -d '.' -o coverage.info
@@ -36,7 +37,7 @@ clean:
 	rm -f *.o
 	rm -f $(LIBDIR)/*.o
 	rm -f test_fa.gcno
-	
+
 mrproper: clean
 	rm -f testfa
 	rm -f libalgo.a
