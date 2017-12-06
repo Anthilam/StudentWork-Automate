@@ -1,5 +1,6 @@
 CFLAGS=-c -Wall -std=c99 -O2 -Iinclude -g -o
 
+MATH=-lm
 CXX = c++
 CXXFLAGS = -Wall -O2 -g -Iinclude -Itests -Itests/include
 
@@ -20,13 +21,13 @@ libfa.a: $(LIBFA_OBJ)
 	ar cru $@ $(LIBFA_OBJ)
 
 run_tests: $(RUNTESTS_OBJ) libfa.a
-	$(CXX) -o $@ $(RUNTESTS_OBJ) -L. -lfa -lpthread
+	$(CXX) -o $@ $(RUNTESTS_OBJ) -L. -lfa -lpthread $(MATH)
 
 testfa: $(LIBDIR)/fa.o testfa.o
-	gcc -g -Wall -std=c99 -o testfa $^
+	gcc -g -Wall -std=c99 -o testfa $^ $(MATH)
 
 testfa.o: testfa.c include/fa.h
-	gcc $(CFLAGS) testfa.o $<
+	gcc $(CFLAGS) testfa.o $< $(MATH)
 
 #coverage: test_fa.gcno
 #	gcov $<
