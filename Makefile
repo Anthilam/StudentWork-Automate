@@ -36,7 +36,7 @@ coverage:
 clean:
 	rm -f *.o
 	rm -f $(LIBDIR)/*.o
-	rm -f test_fa.gcno
+	rm -f tests/test_fa.gcno
 	rm -f tests/*.o
 	rm -f run_tests.gcno
 
