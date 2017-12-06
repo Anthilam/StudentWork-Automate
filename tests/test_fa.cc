@@ -2,16 +2,7 @@
 
 #include "gtest/gtest.h"
 
-// Test de reference
-TEST(nomDuSource,nomDeLaFonction){
-  EXPECT_TRUE(0 ==0);
-}
-/* Minimum pour chaque test
-struct fa a1;
-fa_create(&a1,2,3);
 
-fa_destroy(&a1);
-*/
 
 TEST(fa,createEmpty){
   struct fa a1;
@@ -39,13 +30,9 @@ TEST(fa,createWrong){
   struct fa a1,a2,a3,a4;
   // Verification de la validite des arguments
   fa_create(&a1,2,-3);
-  fa_destroy(&a1);
   fa_create(&a2,-2,3);
-  fa_destroy(&a2);
   fa_create(&a3,0,3);
-  fa_destroy(&a3);
   fa_create(&a4,2,0);
-  fa_destroy(&a4);
 }
 
 TEST(fa,setInitiale){
@@ -227,3 +214,19 @@ TEST(fa,isDeterminist){
   fa_add_transition(&a1,1,'b',1);
   fa_destroy(&a1);
 }
+
+TEST(fa,isComplete){
+  struct fa a1;
+  fa_create(&a1,2,3);
+  EXPECT_TRUE(!fa_is_complete(&a1));
+  //fa_add_transition(&a1,,'',);
+
+  fa_destroy(&a1);
+}
+
+/* Minimum pour chaque test
+struct fa a1;
+fa_create(&a1,2,3);
+
+fa_destroy(&a1);
+*/

@@ -1,7 +1,7 @@
-CFLAGS=-c -Wall -std=c99 -O2 -Iinclude -g -o
+CFLAGS=-c -Wall -std=c99 -Iinclude -g -o
 
 CXX = c++
-CXXFLAGS = -Wall -O2 -g -Iinclude -Itests -Itests/include
+CXXFLAGS = -Wall -O2 -g -Iinclude -Itests -Itests/include -fprofile-arcs -ftest-coverage
 
 LIBDIR=lib
 
@@ -20,7 +20,7 @@ libfa.a: $(LIBFA_OBJ)
 	ar cru $@ $(LIBFA_OBJ)
 
 run_tests: $(RUNTESTS_OBJ) libfa.a
-	$(CXX) -o $@ $(RUNTESTS_OBJ) -L. -lfa -lpthread
+	$(CXX) $(CXXFLAGS) -o $@ $(RUNTESTS_OBJ) -L. -lfa -lpthread --coverage
 
 testfa: $(LIBDIR)/fa.o testfa.o
 	gcc -g -Wall -std=c99 -o testfa $^
@@ -28,15 +28,15 @@ testfa: $(LIBDIR)/fa.o testfa.o
 testfa.o: testfa.c include/fa.h
 	gcc $(CFLAGS) testfa.o $<
 
-#coverage: test_fa.gcno
-#	gcov $<
-#test_fa.gcno: ./tests/test_fa.cc
-#	g++ -fprofile-arcs -ftest-coverage -Iinclude -Itests -Itests/include ./tests/test_fa.cc -lgcov
+coverage:
+	./lcov/bin/lcov -c -d '.' -o coverage.info
+	./lcov/bin/genhtml coverage.info --output-directory html
 
 clean:
 	rm -f *.o
 	rm -f $(LIBDIR)/*.o
 	rm -f test_fa.gcno
+	
 mrproper: clean
 	rm -f testfa
 	rm -f libalgo.a
