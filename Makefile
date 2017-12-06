@@ -12,6 +12,8 @@ RUNTESTS_OBJ = tests/src/gtest-all.o tests/test_fa.o run_tests.o
 
 PROGS=testfa run_tests libfa.a
 
+MATH=-lm
+
 all: $(PROGS)
 
 test: run_tests
@@ -39,6 +41,8 @@ clean:
 	rm -f tests/test_fa.gcno
 	rm -f tests/*.o
 	rm -f run_tests.gcno
+	rm -f test_fa.gcno
+	rm -f tests/test_fa.o
 
 mrproper: clean
 	rm -f testfa

@@ -4,20 +4,31 @@
 
 // Création d'un automate
 void fa_create(struct fa *self, size_t alpha_count, size_t state_count) {
-	self->alpha_count = alpha_count;
-	self->state_count = state_count;
-	self->array_init.value = NULL;
-	self->array_final.value = NULL;
-	fa_create_state_list(self);
+	// Vérification des arguments (transtypage pour négatif)
+	if ((int)alpha_count > 0 && (int)state_count > 0) {
+		// Initialisation de la structure
+		self->alpha_count = alpha_count; // Nb lettres alphabets
+		self->state_count = state_count; // Nb d'états
+
+		self->array_init.value = NULL; // Tableau d'états initiaux
+		self->array_init.size = 0;
+		self->array_init.used = 0;
+
+		self->array_final.value = NULL; // Tableau d'états finaux
+		self->array_final.size = 0;
+		self->array_final.used = 0;
+
+		fa_create_state_list(self); // Liste des états/transitions
+	}
 }
 
-// Création du tableau 2D états/alphabet
-void fa_create_state_list(struct fa *self){
-	// Allocation mémoire du tableau total
+// Création de la liste états/transitions
+void fa_create_state_list(struct fa *self) {
+	// Allocation mémoire du tableau de listes
 	struct list **l = malloc(sizeof(struct list *)*self->state_count);
 
-	// Allocation mémoire de chaque cellules du tableau
-	for(int i = 0; i < self->state_count; ++i) {
+	// Allocation mémoire de chaque listes
+	for (int i = 0; i < self->state_count; ++i) {
 		l[i] = malloc(sizeof(struct list)*self->alpha_count);
 		for (int j = 0; j < self->alpha_count; ++j) {
 			// Initialisation de chaque liste
@@ -30,7 +41,7 @@ void fa_create_state_list(struct fa *self){
 
 // Destruction d'un automate
 void fa_destroy(struct fa *self) {
-	for(int i = 0; i < self->state_count; ++i) {
+	for (int i = 0; i < self->state_count; ++i) {
 		for (int j = 0; j < self->alpha_count; ++j) {
 			// Libération de chaque liste contenu par le tableau
 			fa_destroy_list(&self->state_array[i][j]);
@@ -59,71 +70,75 @@ void fa_destroy_list(struct list *self) {
 
 // Passage d'un état à état initial
 void fa_set_state_initial(struct fa *self, size_t state) {
-	if (self->array_init.value == NULL) {
-		self->array_init.value = malloc(sizeof(int)*10);
-		self->array_init.used = 0;
-		self->array_init.size = 10;
-	}
-
-	bool ok = true;
-	for (int i = 0; i < self->array_init.used; ++i) {
-		if (self->array_init.value[i] == state) {
-			ok = false;
+	if (state >= 0 && state < self->state_count) {
+		if (self->array_init.value == NULL) {
+			self->array_init.value = malloc(sizeof(int)*10);
+			self->array_init.used = 0;
+			self->array_init.size = 10;
 		}
-	}
 
-	if (ok) {
-		if (self->array_init.used == self->array_init.size) {
-			int tmp[self->array_init.size * 2];
-			for (int i = 0; i < self->array_init.used; ++i) {
-				tmp[i] = self->array_init.value[i];
-			}
-
-			free(self->array_init.value);
-			self->array_init.value = malloc(sizeof(int)*self->array_init.size*2);
-			self->array_init.size = self->array_init.size*2;
-			for (int i = 0; i < self->array_init.used; ++i) {
-				self->array_init.value[i] = tmp[i];
+		bool ok = true;
+		for (int i = 0; i < self->array_init.used; ++i) {
+			if (self->array_init.value[i] == state) {
+				ok = false;
 			}
 		}
 
-		self->array_init.value[self->array_init.used] = state;
-		++self->array_init.used;
+		if (ok) {
+			if (self->array_init.used == self->array_init.size) {
+				int tmp[self->array_init.size * 2];
+				for (int i = 0; i < self->array_init.used; ++i) {
+					tmp[i] = self->array_init.value[i];
+				}
+
+				free(self->array_init.value);
+				self->array_init.value = malloc(sizeof(int)*self->array_init.size*2);
+				self->array_init.size = self->array_init.size*2;
+				for (int i = 0; i < self->array_init.used; ++i) {
+					self->array_init.value[i] = tmp[i];
+				}
+			}
+
+			self->array_init.value[self->array_init.used] = state;
+			++self->array_init.used;
+		}
 	}
 }
 
 // Passage d'un état à état final
 void fa_set_state_final(struct fa *self, size_t state) {
-	if (self->array_final.value == NULL) {
-		self->array_final.value = malloc(sizeof(int)*10);
-		self->array_final.used = 0;
-		self->array_final.size = 10;
-	}
-
-	bool ok = true;
-	for (int i = 0; i < self->array_final.used; ++i) {
-		if (self->array_final.value[i] == state) {
-			ok = false;
+	if (state >= 0 && state < self->state_count) {
+		if (self->array_final.value == NULL) {
+			self->array_final.value = malloc(sizeof(int)*10);
+			self->array_final.used = 0;
+			self->array_final.size = 10;
 		}
-	}
 
-	if (ok) {
-		if (self->array_final.used == self->array_final.size) {
-			int tmp[self->array_final.size * 2];
-			for (int i = 0; i < self->array_final.used; ++i) {
-				tmp[i] = self->array_final.value[i];
-			}
-
-			free(self->array_final.value);
-			self->array_final.value = malloc(sizeof(int)*self->array_final.size*2);
-			self->array_final.size = self->array_final.size*2;
-			for (int i = 0; i < self->array_final.used; ++i) {
-				self->array_final.value[i] = tmp[i];
+		bool ok = true;
+		for (int i = 0; i < self->array_final.used; ++i) {
+			if (self->array_final.value[i] == state) {
+				ok = false;
 			}
 		}
 
-		self->array_final.value[self->array_final.used] = state;
-		++self->array_final.used;
+		if (ok) {
+			if (self->array_final.used == self->array_final.size) {
+				int tmp[self->array_final.size * 2];
+				for (int i = 0; i < self->array_final.used; ++i) {
+					tmp[i] = self->array_final.value[i];
+				}
+
+				free(self->array_final.value);
+				self->array_final.value = malloc(sizeof(int)*self->array_final.size*2);
+				self->array_final.size = self->array_final.size*2;
+				for (int i = 0; i < self->array_final.used; ++i) {
+					self->array_final.value[i] = tmp[i];
+				}
+			}
+
+			self->array_final.value[self->array_final.used] = state;
+			++self->array_final.used;
+		}
 	}
 }
 
@@ -131,7 +146,9 @@ void fa_set_state_final(struct fa *self, size_t state) {
 void fa_add_transition(struct fa *self, size_t from, char alpha, size_t to) {
 	int n = alpha - 'a';
 	// On vérifie que la lettre fait bien partie de l'alphabet de l'automate
-	if (n < self->alpha_count && to < self->state_count) {
+	if (n >= 0 && n < self->alpha_count
+		&& to >= 0 && to < self->state_count
+		&& from >= 0 && from < self->state_count) {
 		// Si il n'y a pas de transitions, initialisation de la liste chaînée
 		if (self->state_array[from][n].first == NULL) {
 			self->state_array[from][n].first =  malloc(sizeof(struct list_node));
@@ -222,19 +239,25 @@ void fa_dot_print(const struct fa *self, FILE *out) {
 void fa_remove_transition(struct fa *self, size_t from, char alpha, size_t to) {
 	int n = alpha - 'a';
 	// On vérifie que la lettre fait bien partie de l'alphabet de l'automate
-	if (n < self->alpha_count) {
+	if (n >= 0 && n < self->alpha_count
+		&& to >= 0 && to < self->state_count
+		&& from >= 0 && from < self->state_count) {
+		// Si la liste n'est pas vide
 		if (self->state_array[from][n].first != NULL) {
+			// Si il n'y a qu'une transition dans la liste
 			if (self->state_array[from][n].first->value == to
 				&& self->state_array[from][n].first->next == NULL) {
 				free(self->state_array[from][n].first);
 				self->state_array[from][n].first = NULL;
 			}
+			// Si la transition à enlever est la première de la liste
 			else if (self->state_array[from][n].first->value == to
 				&& self->state_array[from][n].first->next != NULL) {
 				struct list_node *l = self->state_array[from][n].first->next;
 				free(self->state_array[from][n].first);
 				self->state_array[from][n].first = l;
 			}
+			// Si la transition est plus loin dans la liste
 			else if (self->state_array[from][n].first->next != NULL){
 				fa_remove_node_transition(self->state_array[from][n].first, to);
 			}
@@ -242,16 +265,20 @@ void fa_remove_transition(struct fa *self, size_t from, char alpha, size_t to) {
 	}
 }
 
+// Suppression d'une transition (parcours interne d'une liste)
 void fa_remove_node_transition(struct list_node *self, size_t to) {
+	// Si la transition à enlever est la dernière de la liste
 	if (self->next->value == to && self->next->next == NULL) {
 		free(self->next);
 		self->next = NULL;
 	}
+	// Si la transition à enlever est "au milieu" de la liste
 	else if (self->next->value == to && self->next->next != NULL) {
 		struct list_node *l = self->next->next;
 		free(self->next);
 		self->next = l;
 	}
+	// Si la transition est plus dans la liste
 	else if (self->next->next != NULL) {
 		fa_remove_node_transition(self->next, to);
 	}
@@ -259,7 +286,7 @@ void fa_remove_node_transition(struct list_node *self, size_t to) {
 
 // Suppression d'un état
 void fa_remove_state(struct fa *self, size_t state) {
-	if (state < self->state_count) {
+	if (state < self->state_count && state >= 0) {
 		// Suppression de toutes les transitions partant de l'état à supprimer
 		for (int i = 0; i < self->alpha_count; ++i) {
 			for (int j = 0; j <= self->state_count; ++j) {
@@ -375,16 +402,19 @@ size_t fa_count_transitions(const struct fa *self) {
 
 // Fonction établissant si l'automate est déterministe
 bool fa_is_deterministic(const struct fa *self) {
-	int i=0,j=0;
-	bool res=true;
-	if(self->array_init.used != 1){
+	int i = 0;
+	int j = 0;
+	bool res = true;
+
+	if (self->array_init.used != 1) {
 		return false;
 	}
-	while(i<self->state_count && res){
-		j=0;
-		while(j<self->alpha_count && res){
-			if(self->state_array[i][j].first != NULL){
-			 	if(self->state_array[i][j].first->next != NULL){
+
+	while (i < self->state_count && res) {
+		j = 0;
+		while (j < self->alpha_count && res) {
+			if (self->state_array[i][j].first != NULL) {
+			 	if (self->state_array[i][j].first->next != NULL) {
 			 		res = false;
 			 	}
 			}
@@ -398,61 +428,79 @@ bool fa_is_deterministic(const struct fa *self) {
 
 // Fonction établissant si l'automate est complet
 bool fa_is_complete(const struct fa *self) {
-	int i=0,j=0;
-	bool res=true;
-	while(i<self->state_count && res){
-		j=0;
-		while(j<self->alpha_count && res){
-			if(self->state_array[i][j].first == NULL){
+	int i = 0;
+	int j = 0;
+	bool res = true;
+	while (i < self->state_count && res) {
+		j = 0;
+		while (j < self->alpha_count && res) {
+			if (self->state_array[i][j].first == NULL) {
 		 		res = false;
 			}
 			j++;
 		}
 		i++;
 	}
+
 	return res;
 }
 
 // Complétion d'un automate
 void fa_make_complete(struct fa *self) {
-	if(fa_is_complete(self)){
-		return;
-	}
-	// creation d'une nouvelle automate possedant un etat supplementaire
-	// qui sera utilise comme "poubelle"
-	self->state_array = realloc(self->state_array,sizeof(struct list *)*(self->state_count+1));
-	self->state_count++;
-	self->state_array[self->state_count-1] = malloc(sizeof(struct list*)*self->alpha_count);
-	int i=0,j;
-	for (int k=0;k<self->alpha_count;k++){
-		self->state_array[self->state_count-1][k].first=NULL;
-	}
-	while(i<self->state_count){
-		j=0;
-		while(j<self->alpha_count){
-			if(self->state_array[i][j].first == NULL){
-				fa_add_transition(self, i,'a'+j,self->state_count-1);
-			}
-			j++;
-		}
-		i++;
-	}
+	if (!fa_is_complete(self)) {
+		// creation d'une nouvelle automate possedant un etat supplementaire
+		// qui sera utilise comme "poubelle"
+		self->state_array = realloc(self->state_array,sizeof(struct list *)*(self->state_count+1));
 
+		self->state_count++;
+
+		self->state_array[self->state_count-1] = malloc(sizeof(struct list*)*self->alpha_count);
+
+		int i = 0;
+		int j;
+
+		for (int k = 0; k < self->alpha_count; ++k) {
+			self->state_array[self->state_count-1][k].first = NULL;
+		}
+
+		while (i < self->state_count) {
+			j = 0;
+			while (j < self->alpha_count) {
+				if (self->state_array[i][j].first == NULL) {
+					fa_add_transition(self, i,'a'+j, self->state_count-1);
+				}
+				j++;
+			}
+			i++;
+		}
+	}
 }
 
 // Fonction de parcours en profondeur d'un graphe
 void graph_depth_first_search(const struct graph *self, size_t state, bool *visited) {
-	visited[state] = true;
-	if (self->adjacent[state].first != NULL) {
-		struct list_node *l = self->adjacent[state].first;
+	if (state >= 0 && state < self->state_count) {
+		visited[state] = true;
+		if (self->adjacent[state].first != NULL) {
+			struct list_node *l = self->adjacent[state].first;
 
-		while (l != NULL) {
-			if (!visited[l->value]) {
-				graph_depth_first_search(self, l->value, visited);
+			while (l != NULL) {
+				if (!visited[l->value]) {
+					graph_depth_first_search(self, l->value, visited);
+				}
+				l = l->next;
 			}
-			l = l->next;
 		}
 	}
+}
+
+// Fonction déterminant si un chemin existe entre deux états
+bool graph_has_path(const struct graph *self, size_t from, size_t to) {
+	if (from >= 0 && from < self->state_count
+			&& to >= 0 && to < self->state_count) {
+		return graph_has_path_with_prev(self, from, to, 0);
+	}
+
+	return false;
 }
 
 bool graph_has_path_with_prev(const struct graph *self, size_t from, size_t to, size_t prev) {
@@ -479,15 +527,11 @@ bool graph_has_path_with_prev(const struct graph *self, size_t from, size_t to, 
 	return false;
 }
 
-// Fonction déterminant si un chemin existe entre deux états
-bool graph_has_path(const struct graph *self, size_t from, size_t to) {
-	return graph_has_path_with_prev(self, from, to, 0);
-}
-
 // Ajout d'un adjacent
 void graph_add_adjacent(struct graph *self, size_t from, size_t to) {
 	// On vérifie que la lettre fait bien partie de l'alphabet de l'automate
-	if (to < self->state_count) {
+	if (to >= 0 && to < self->state_count
+			&& from >= 0 && from < self->state_count) {
 		// Si il n'y a pas de transitions, initialisation de la liste chaînée
 		if (self->adjacent[from].first == NULL) {
 			self->adjacent[from].first =  malloc(sizeof(struct list_node));
@@ -538,7 +582,8 @@ void graph_add_node_adjacent(struct list_node *self, size_t to) {
 // Ajout d'un arc
 void graph_add_arc(struct graph *self, size_t from, size_t to) {
 	// On vérifie que la lettre fait bien partie de l'alphabet de l'automate
-	if (to < self->state_count) {
+	if (to >= 0 && to < self->state_count
+			&& from >= 0 && from < self->state_count) {
 		// Si il n'y a pas de transitions, initialisation de la liste chaînée
 		if (self->arc[from].first == NULL) {
 			self->arc[from].first =  malloc(sizeof(struct list_node));
@@ -785,9 +830,11 @@ void fa_remove_non_co_accessible_states(struct fa *self) {
 
 // Fonction vérifiant si un état est initial ou non
 bool is_initial(const struct fa *self, int state) {
-	for (int i = 0; i < self->array_init.used; ++i) {
-		if (state == self->array_init.value[i]) {
-			return true;
+	if (state >= 0 && state < self->state_count) {
+		for (int i = 0; i < self->array_init.used; ++i) {
+			if (state == self->array_init.value[i]) {
+				return true;
+			}
 		}
 	}
 	return false;
@@ -795,9 +842,11 @@ bool is_initial(const struct fa *self, int state) {
 
 // Fonction vérifiant si un état est final ou non
 bool is_final(const struct fa *self, int state) {
-	for (int i = 0; i < self->array_final.used; ++i) {
-		if (state == self->array_final.value[i]) {
-			return true;
+	if (state >= 0 && state < self->state_count) {
+		for (int i = 0; i < self->array_final.used; ++i) {
+			if (state == self->array_final.value[i]) {
+				return true;
+			}
 		}
 	}
 	return false;
