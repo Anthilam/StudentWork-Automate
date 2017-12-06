@@ -40,7 +40,10 @@ clean:
 	rm -f *.o
 	rm -f $(LIBDIR)/*.o
 	rm -f test_fa.gcno
+	rm -f tests/test_fa.o
+
 mrproper: clean
 	rm -f testfa
 	rm -f libalgo.a
 	rm -f run_tests
+	rm -f libfa.a
