@@ -55,6 +55,15 @@ TEST(fa,setInitiale){
   EXPECT_TRUE(a1.array_init.used == 2);
   fa_destroy(&a1);
 }
+TEST(fa,setLotInitiale){
+  struct fa a1;
+  fa_create(&a1,3,40);
+  for(size_t nbState=0;nbState<40;nbState++){
+      fa_set_state_initial(&a1,nbState);
+      EXPECT_TRUE(a1.array_init.used == nbState+1);
+  }
+  fa_destroy(&a1);
+}
 
 TEST(fa,setFinal){
   struct fa a1;
@@ -76,9 +85,21 @@ TEST(fa,setFinal){
   fa_destroy(&a1);
 }
 
-TEST(fa,addOneTransition){
+TEST(fa,setLotFinal){
+  struct fa a1;
+  fa_create(&a1,3,40);
+  for(size_t nbState=0;nbState<40;nbState++){
+      fa_set_state_final(&a1,nbState);
+      EXPECT_TRUE(a1.array_final.used == nbState+1);
+  }
+  fa_destroy(&a1);
+}
+
+TEST(fa,addSomeTransition){
   struct fa a1;
   fa_create(&a1,3,4);
+  EXPECT_TRUE(fa_count_transitions(&a1)==0);
+  fa_add_transition(&a1,0,'a',-1);
   EXPECT_TRUE(fa_count_transitions(&a1)==0);
   fa_add_transition(&a1,0,'a',3);
   EXPECT_TRUE(fa_count_transitions(&a1)==1);
@@ -110,6 +131,24 @@ TEST(fa,addAllTransition){
   fa_destroy(&a1);
 }
 
+TEST(fa,faPrint){
+  struct fa a1;
+  fa_create(&a1, 2, 2);
+
+  fa_add_transition(&a1, 0, 'a', 1);
+  fa_add_transition(&a1, 0, 'a', 0);
+  fa_add_transition(&a1, 1, 'a', 1);
+  fa_add_transition(&a1, 1, 'b', 1);
+
+  fa_set_state_initial(&a1, 0);
+  fa_set_state_final(&a1, 1);
+
+  fa_pretty_print(&a1,stdout);
+  fa_dot_print(&a1,stdout);
+
+  fa_destroy(&a1);
+}
+
 TEST(fa,removeOneTransition){
   struct fa a1;
   fa_create(&a1,3,4);
@@ -119,9 +158,9 @@ TEST(fa,removeOneTransition){
   EXPECT_TRUE(fa_count_transitions(&a1)==1);
   fa_add_transition(&a1,0,'a',3);
   EXPECT_TRUE(fa_count_transitions(&a1)==2);
-
-
-  // suppression d'une transistion non existante
+  fa_add_transition(&a1,0,'a',2);
+  EXPECT_TRUE(fa_count_transitions(&a1)==3);
+  // suppression d'une transistion situe entre deux
   fa_remove_transition(&a1,0,'a',2);
   EXPECT_TRUE(fa_count_transitions(&a1)==2);
   // suppression d'une transition
@@ -168,6 +207,17 @@ TEST(fa,removeAllTransition){
 TEST(fa,removeState){
   struct fa a1;
   fa_create(&a1,2,3);
+  fa_set_state_final(&a1,2);
+  fa_set_state_final(&a1,1);
+  fa_set_state_initial(&a1,1);
+  fa_set_state_initial(&a1,2);
+  for(size_t nbAlph=0;nbAlph<3;nbAlph++){
+    for(size_t nbState=0;nbState<4;nbState++){
+      for(size_t nbState1=0;nbState1<4;nbState1++){
+        fa_add_transition(&a1,nbState,'a'+nbAlph,nbState1);
+      }
+    }
+  }
   EXPECT_TRUE(a1.state_count == 3);
   // Suppressions d'états non valide
   fa_remove_state(&a1,-3);
@@ -175,14 +225,15 @@ TEST(fa,removeState){
   fa_remove_state(&a1,10);
   EXPECT_TRUE(a1.state_count == 3);
   // Suppressions de tous les états 1 par 1
-  fa_remove_state(&a1,2);
+  fa_remove_state(&a1,0);
   EXPECT_TRUE(a1.state_count == 2);
-  fa_remove_state(&a1,2);
-  EXPECT_TRUE(a1.state_count == 2);
+  fa_remove_state(&a1,1);
+  EXPECT_TRUE(a1.state_count == 1);
   fa_remove_state(&a1,1);
   EXPECT_TRUE(a1.state_count == 1);
   fa_remove_state(&a1,0);
   EXPECT_TRUE(a1.state_count == 0);
+
   fa_destroy(&a1);
 }
 
@@ -212,21 +263,176 @@ TEST(fa,isDeterminist){
   fa_add_transition(&a1,0,'b',1);
   fa_add_transition(&a1,1,'a',3);
   fa_add_transition(&a1,1,'b',1);
+  EXPECT_TRUE(!fa_is_deterministic(&a1));
   fa_destroy(&a1);
 }
 
 TEST(fa,isComplete){
   struct fa a1;
-  fa_create(&a1,2,3);
+  fa_create(&a1,2,2);
   EXPECT_TRUE(!fa_is_complete(&a1));
-  //fa_add_transition(&a1,,'',);
-
+  fa_add_transition(&a1,0,'a', 0);
+  EXPECT_TRUE(!fa_is_complete(&a1));
+  fa_add_transition(&a1,0,'a', 1);
+  EXPECT_TRUE(!fa_is_complete(&a1));
+  fa_add_transition(&a1,0,'b', 1);
+  EXPECT_TRUE(!fa_is_complete(&a1));
+  fa_add_transition(&a1,1,'a', 0);
+  EXPECT_TRUE(!fa_is_complete(&a1));
+  fa_add_transition(&a1,1,'b', 1);
+  EXPECT_TRUE(fa_is_complete(&a1));
   fa_destroy(&a1);
 }
 
-/* Minimum pour chaque test
-struct fa a1;
-fa_create(&a1,2,3);
+TEST(fa,makeComplete){
+  struct fa a1;
+  fa_create(&a1,2,3);
+  EXPECT_TRUE(!fa_is_complete(&a1));
+  fa_make_complete(&a1);
+  EXPECT_TRUE(fa_is_complete(&a1));
+  fa_destroy(&a1);
+}
 
-fa_destroy(&a1);
+TEST(fa,createGraphNotInverted){
+  struct fa a1;
+  struct graph g1;
+  fa_create(&a1,6,10);
+	fa_set_state_initial(&a1,0);
+  fa_set_state_initial(&a1,8);
+  fa_set_state_initial(&a1,6);
+  fa_set_state_initial(&a1,4);
+	fa_set_state_final(&a1, 1);
+  fa_set_state_final(&a1, 8);
+  fa_set_state_final(&a1, 6);
+  fa_set_state_final(&a1, 4);
+
+  for(size_t nbAlph=0;nbAlph<3;nbAlph++){
+    for(size_t nbState=0;nbState<4;nbState++){
+      for(size_t nbState1=0;nbState1<4;nbState1++){
+        fa_add_transition(&a1,nbState,'a'+nbAlph,nbState1);
+      }
+    }
+  }
+
+  graph_create_from_fa(&g1,&a1,false);
+  graph_destroy(&g1);
+  fa_destroy(&a1);
+}
+TEST(fa,createGraphInverted){
+  struct fa a1;
+  struct graph g1;
+  fa_create(&a1,6,10);
+	fa_set_state_initial(&a1,0);
+  fa_set_state_initial(&a1,8);
+  fa_set_state_initial(&a1,6);
+  fa_set_state_initial(&a1,4);
+	fa_set_state_final(&a1, 1);
+  fa_set_state_final(&a1, 8);
+  fa_set_state_final(&a1, 6);
+  fa_set_state_final(&a1, 4);
+
+  for(size_t nbAlph=0;nbAlph<3;nbAlph++){
+    for(size_t nbState=0;nbState<4;nbState++){
+      for(size_t nbState1=0;nbState1<4;nbState1++){
+        fa_add_transition(&a1,nbState,'a'+nbAlph,nbState1);
+      }
+    }
+  }
+
+  graph_create_from_fa(&g1,&a1,true);
+  graph_destroy(&g1);
+  fa_destroy(&a1);
+}
+
+TEST(fa,graphPrinting){
+  struct fa a1;
+  struct graph g1;
+  fa_create(&a1,6,10);
+	fa_set_state_initial(&a1,0);
+  fa_set_state_initial(&a1,8);
+  fa_set_state_initial(&a1,6);
+  fa_set_state_initial(&a1,4);
+	fa_set_state_final(&a1, 1);
+  fa_set_state_final(&a1, 8);
+  fa_set_state_final(&a1, 6);
+  fa_set_state_final(&a1, 4);
+
+  for(size_t nbAlph=0;nbAlph<3;nbAlph++){
+    for(size_t nbState=0;nbState<4;nbState++){
+      for(size_t nbState1=0;nbState1<4;nbState1++){
+        fa_add_transition(&a1,nbState,'a'+nbAlph,nbState1);
+      }
+    }
+  }
+
+  graph_create_from_fa(&g1,&a1,true);
+  graph_pretty_print(&g1,stdout);
+  graph_destroy(&g1);
+  fa_destroy(&a1);
+
+}
+
+TEST(fa,languageIsEmpty){
+  struct fa a1;
+  fa_create(&a1,6,10);
+  EXPECT_TRUE(fa_is_language_empty(&a1));
+  fa_set_state_final(&a1,2);
+  fa_set_state_initial(&a1,0);
+  fa_add_transition(&a1,0,'a',1);
+  fa_add_transition(&a1,1,'b',2);
+  EXPECT_TRUE(!fa_is_language_empty(&a1));
+  fa_destroy(&a1);
+}
+
+TEST(fa,removeNonAccesible){
+  struct fa a1;
+  fa_create(&a1,6,10);
+  fa_set_state_final(&a1,2);
+  fa_set_state_initial(&a1,0);
+  fa_add_transition(&a1,0,'a',1);
+  fa_add_transition(&a1,1,'b',2);
+  fa_remove_non_accessible_states(&a1);
+  fa_destroy(&a1);
+}
+
+TEST(fa,removeNonCoAccesible){
+  struct fa a1;
+  fa_create(&a1,6,10);
+  fa_set_state_final(&a1,2);
+  fa_set_state_initial(&a1,0);
+  fa_add_transition(&a1,0,'a',1);
+  fa_add_transition(&a1,1,'b',2);
+  fa_remove_non_co_accessible_states(&a1);
+  fa_destroy(&a1);
+}
+
+TEST(fa,faProduct){
+  struct fa a1;
+  fa_create(&a1,6,10);
+  fa_set_state_final(&a1,2);
+  fa_set_state_initial(&a1,0);
+  fa_add_transition(&a1,0,'a',1);
+  fa_add_transition(&a1,1,'b',2);
+
+  struct fa a2;
+	fa_create(&a2, 2, 2);
+
+	fa_add_transition(&a2, 0, 'a', 0);
+	fa_add_transition(&a2, 0, 'b', 1);
+	fa_add_transition(&a2, 1, 'b', 1);
+	fa_add_transition(&a2, 1, 'a', 0);
+
+	fa_set_state_initial(&a2, 0);
+	fa_set_state_final(&a2, 1);
+
+	struct fa a3;
+	fa_create_product(&a3, &a2, &a1);
+  // faire la verification d'avoir le bon automate
+  fa_destroy(&a1);
+}
+/* Minimum pour chaque test
+  struct fa a1;
+  fa_create(&a1,6,10);
+
+  fa_destroy(&a1);
 */
