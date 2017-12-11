@@ -384,7 +384,7 @@ TEST(fa,languageIsEmpty){
   fa_destroy(&a1);
 }
 
-TEST(fa,removeNonAccesible){
+TEST(fa,removeNonAccessible){
   struct fa a1;
   fa_create(&a1,6,10);
   fa_set_state_final(&a1,2);
@@ -398,7 +398,7 @@ TEST(fa,removeNonAccesible){
   fa_destroy(&a1);
 }
 
-TEST(fa,removeNonCoAccesible){
+TEST(fa,removeNonCoAccessible){
   struct fa a1;
   fa_create(&a1,6,10);
   fa_set_state_final(&a1,2);
