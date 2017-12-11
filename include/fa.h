@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <math.h>
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -152,12 +153,21 @@ bool fa_add_deterministic_state(struct fa *self, const struct fa *nfa, struct li
 // Déterminisation d'un automate
 void fa_create_deterministic(struct fa *self, const struct fa *nfa);
 
+// Fonction de copie d'un automate
+void fa_copy(struct fa *self, const struct fa* other);
+
 /* Fonction déterminant si un langage accepté par un automates
 est inclus dans un autre langage accepté par un autre automate, pour cela
 on déterminise les deux automates entrés, puis on calcule le complémentaire
 de B afin de calculer l'intersection de A et ^B, si celle-ci est vide,
 alors A est inclus dans B */
 bool fa_is_included(const struct fa *lhs, const struct fa *rhs);
+
+// Fonction déterminant si deux états sont équivalents
+bool fa_are_nerode_equivalent(const struct fa *self, size_t s1, size_t s2);
+
+// Minimisation d'un automate à l'aide de la congruence de Nérode
+void fa_create_minimal_nerode(struct fa *self, const struct fa *other);
 
 #ifdef __cplusplus
 }

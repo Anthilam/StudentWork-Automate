@@ -729,37 +729,36 @@ bool fa_is_language_empty(const struct fa *self) {
 	if (self->state_count == 0 || self->array_final.value == NULL || self->array_init.value == NULL) {
 		return true;
 	}
-	else {
-		// Initilisation du tableau des états visités
-		bool visited[self->state_count];
+
+	// Initilisation du tableau des états visités
+	bool visited[self->state_count];
+	for (int i = 0; i < self->state_count; ++i) {
+		visited[i] = false;
+	}
+
+	// Création du graphe
+	struct graph g;
+	graph_create_from_fa(&g, self, false);
+	// Parcours en profondeur du graphe en partant d'un état initial à la fois
+	for (int j = 0; j < self->array_init.used; ++j) {
+		graph_depth_first_search(&g, self->array_init.value[j], visited);
+		// Après parcours, on vérifie si on a atteint un état final
+		for (int i = 0; i < self->array_final.used; ++i) {
+			// Si oui on détruit le graphe et on retourne faux
+			if (visited[self->array_final.value[i]]) {
+				graph_destroy(&g);
+				return false;
+			}
+		}
+
+		// Sinon on reset le tableau des états visités
 		for (int i = 0; i < self->state_count; ++i) {
 			visited[i] = false;
 		}
-
-		// Création du graphe
-		struct graph g;
-		graph_create_from_fa(&g, self, false);
-		// Parcours en profondeur du graphe en partant d'un état initial à la fois
-		for (int j = 0; j < self->array_init.used; ++j) {
-			graph_depth_first_search(&g, self->array_init.value[j], visited);
-			// Après parcours, on vérifie si on a atteint un état final
-			for (int i = 0; i < self->array_final.used; ++i) {
-				// Si oui on détruit le graphe et on retourne faux
-				if (visited[self->array_final.value[i]] == true) {
-					graph_destroy(&g);
-					return false;
-				}
-			}
-
-			// Sinon on reset le tableau des états visités
-			for (int i = 0; i < self->state_count; ++i) {
-				visited[i] = false;
-			}
-		}
-
-		// Si le langage est vide on détruit le graphe puis on retourne vrai
-		graph_destroy(&g);
 	}
+
+	// Si le langage est vide on détruit le graphe puis on retourne vrai
+	graph_destroy(&g);
 
 	return true;
 }
@@ -902,7 +901,9 @@ void fa_create_product(struct fa *self, const struct fa *lhs, const struct fa *r
 		}
 	}
 
+	// Suppresion des états inutiles
 	fa_remove_non_accessible_states(self);
+	fa_remove_non_co_accessible_states(self);
 }
 
 // Détermine si l'intersection entre deux automates est vide
@@ -997,132 +998,165 @@ bool fa_add_deterministic_state(struct fa *self, const struct fa *nfa, struct li
 	return addOk;
 }
 
+// Fonction de copie d'un automate
+void fa_copy(struct fa *self, const struct fa *other) {
+	fa_create(self, other->alpha_count, other->state_count);
+
+	for (int i = 0; i < other->state_count; ++i) {
+		for (int j = 0; j < other->alpha_count; ++j) {
+			struct list_node *l = other->state_array[i][j].first;
+
+			while (l != NULL) {
+				fa_add_transition(self, i, 'a'+j, l->value);
+				l = l->next;
+			}
+		}
+	}
+
+	self->array_init.value = malloc(other->array_init.size*sizeof(int));
+	self->array_final.value = malloc(other->array_final.size*sizeof(int));
+
+	memcpy(self->array_init.value, other->array_init.value, other->array_init.size*sizeof(int));
+	memcpy(self->array_final.value, other->array_final.value, other->array_init.size*sizeof(int));
+
+	self->array_init.size = other->array_init.size;
+	self->array_init.used = other->array_init.used;
+
+	self->array_final.size = other->array_final.size;
+	self->array_final.used = other->array_final.used;
+}
+
 // Déterminisation d'un automate
 void fa_create_deterministic(struct fa *self, const struct fa *nfa) {
 	/* Pour répresenter le tableau de déterminisation, on utilise self->state_array,
 	puis on effectue les bonnes correspondances à la fin pour obtenir l'automates
 	determinisé, toujours dans self->state_array */
 
-	// Variable contenant le nombre d'états maximum de l'automate déterminisé
-	int n = pow(2, nfa->state_count);
-	// Nombres d'états courant de l'automate déterminisé
-	int nbStates = 0;
+	if (!fa_is_deterministic(nfa)) {
+		// Variable contenant le nombre d'états maximum de l'automate déterminisé
+		int n = pow(2, nfa->state_count);
+		// Nombres d'états courant de l'automate déterminisé
+		int nbStates = 0;
 
-	// Allocation mémoire de l'automate déterminisé
-	fa_create(self, nfa->alpha_count, n);
+		// Allocation mémoire de l'automate déterminisé
+		fa_create(self, nfa->alpha_count, n);
 
-	// Initialisation du tableau de correspondance des états
-	struct list *det_states = malloc(sizeof(struct list)*n);
-	for (int i = 0; i < n; ++i) {
-		det_states[i].first = malloc(sizeof(struct list_node));
-		det_states[i].first->next = NULL;
-		det_states[i].first->value = -1;
-	}
-
-	// Ajout des états initiaux
-	for (int i = 0; i < nfa->array_init.used; ++i) {
-		int current = nfa->array_init.value[i];
-		det_states[i].first->value = current;
-
-		fa_set_state_initial(self, current);
-
-		for (int j = 0; j < nfa->alpha_count; ++j) {
-			struct list_node *l = nfa->state_array[current][j].first;
-			while (l != NULL) {
-				fa_add_transition(self, current, 'a'+j, l->value);
-				l = l->next;
-			}
+		// Initialisation du tableau de correspondance des états
+		struct list *det_states = malloc(sizeof(struct list)*n);
+		for (int i = 0; i < n; ++i) {
+			det_states[i].first = malloc(sizeof(struct list_node));
+			det_states[i].first->next = NULL;
+			det_states[i].first->value = -1;
 		}
 
-		++nbStates;
-	}
+		// Ajout des états initiaux
+		for (int i = 0; i < nfa->array_init.used; ++i) {
+			int current = nfa->array_init.value[i];
+			det_states[i].first->value = current;
 
-	// Ajout des états suivants
-	bool run = true;
-	int count = 0;
-	while (run && count < n) {
-		bool test[nfa->alpha_count];
-		for (int i = 0; i < nfa->alpha_count; ++i) {
-			test[i] = fa_add_deterministic_state(self, nfa, det_states, self->state_array[count][i].first, nbStates);
-			if (test[i]) {
-				++nbStates;
-			}
-			// run passe à faux si fa_add_deterministic_state retourne faux pour toutes les transitions
-			run |= test[i];
-		}
-		++count;
-	}
+			fa_set_state_initial(self, current);
 
-	/* Mise en place de la correspondance des états
-	Pour cela, on regarde le contenu du tableau de déterminisation, puis on regarde
-	dans la liste d'ensembles d'états la correspondance, et on change le contenu du tableau
-	par l'indice correspondant, sur le même principe que fa_look_in_det_states */
-	for (int i = 0; i < nbStates; ++i) {
-		for (int j = 0; j < nfa->alpha_count; ++j) {
-			bool res[nbStates];
-			for (int k = 0; k < nbStates; ++k) {
-				res[k] = true;
-			}
-
-			for (int k = 0; k < nbStates; ++k) {
-				struct list_node *det = det_states[k].first;
-				struct list_node *toAdd = self->state_array[i][j].first;
-
-				while (toAdd != NULL && det != NULL) {
-					if (det->value != toAdd->value) {
-						res[k] = false;
-						break;
-					}
-
-					det = det->next;
-					toAdd = toAdd->next;
-
-					if ((det == NULL && toAdd != NULL)
-					 		|| (det != NULL && toAdd == NULL)) {
-						res[k] = false;
-						break;
-					}
+			for (int j = 0; j < nfa->alpha_count; ++j) {
+				struct list_node *l = nfa->state_array[current][j].first;
+				while (l != NULL) {
+					fa_add_transition(self, current, 'a'+j, l->value);
+					l = l->next;
 				}
 			}
 
-			// Passage des ensembles d'états au bon indice correspondants
-			for (int k = 0; k < nbStates; ++k) {
-				if (res[k]) {
-					// Vérification de la présence d'un état final dans l'ensemble d'états
-					for (int z = 0; z < nfa->array_final.used; ++z) {
-						struct list_node *toAdd = self->state_array[i][j].first;
-						while (toAdd != NULL) {
-							// Ajout d'un état final si présence d'un dans l'ensemble d'états
-							if (toAdd->value == nfa->array_final.value[z]) {
-								fa_set_state_final(self, k);
-							}
+			++nbStates;
+		}
 
-							toAdd = toAdd->next;
+		// Ajout des états suivants
+		bool run = true;
+		int count = 0;
+		while (run && count < n) {
+			bool test[nfa->alpha_count];
+			for (int i = 0; i < nfa->alpha_count; ++i) {
+				test[i] = fa_add_deterministic_state(self, nfa, det_states, self->state_array[count][i].first, nbStates);
+				if (test[i]) {
+					++nbStates;
+				}
+				// run passe à faux si fa_add_deterministic_state retourne faux pour toutes les transitions
+				run |= test[i];
+			}
+			++count;
+		}
+
+		/* Mise en place de la correspondance des états
+		Pour cela, on regarde le contenu du tableau de déterminisation, puis on regarde
+		dans la liste d'ensembles d'états la correspondance, et on change le contenu du tableau
+		par l'indice correspondant, sur le même principe que fa_look_in_det_states */
+		for (int i = 0; i < nbStates; ++i) {
+			for (int j = 0; j < nfa->alpha_count; ++j) {
+				bool res[nbStates];
+				for (int k = 0; k < nbStates; ++k) {
+					res[k] = true;
+				}
+
+				for (int k = 0; k < nbStates; ++k) {
+					struct list_node *det = det_states[k].first;
+					struct list_node *toAdd = self->state_array[i][j].first;
+
+					while (toAdd != NULL && det != NULL) {
+						if (det->value != toAdd->value) {
+							res[k] = false;
+							break;
+						}
+
+						det = det->next;
+						toAdd = toAdd->next;
+
+						if ((det == NULL && toAdd != NULL)
+						 		|| (det != NULL && toAdd == NULL)) {
+							res[k] = false;
+							break;
 						}
 					}
-
-					// On détruit l'ensemble d'états puis on ajout le bon indice correspondant
- 					fa_destroy_list(&self->state_array[i][j]);
-					fa_add_transition(self, i, 'a'+j, k);
 				}
+
+				// Passage des ensembles d'états au bon indice correspondants
+				for (int k = 0; k < nbStates; ++k) {
+					if (res[k]) {
+						// Vérification de la présence d'un état final dans l'ensemble d'états
+						for (int z = 0; z < nfa->array_final.used; ++z) {
+							struct list_node *toAdd = self->state_array[i][j].first;
+							while (toAdd != NULL) {
+								// Ajout d'un état final si présence d'un dans l'ensemble d'états
+								if (toAdd->value == nfa->array_final.value[z]) {
+									fa_set_state_final(self, k);
+								}
+
+								toAdd = toAdd->next;
+							}
+						}
+
+						// On détruit l'ensemble d'états puis on ajout le bon indice correspondant
+	 					fa_destroy_list(&self->state_array[i][j]);
+						fa_add_transition(self, i, 'a'+j, k);
+					}
+				}
+
 			}
-
 		}
-	}
 
-	// Suppression des états inutiles
-	for (int i = n; i >= nbStates; --i) {
-		fa_remove_state(self, i);
-	}
+		// Suppression des états inutiles
+		for (int i = n; i >= nbStates; --i) {
+			fa_remove_state(self, i);
+		}
 
-	// Libération mémoire du tableau de correspondance des états
-	for (int i = 0; i < n; ++i) {
-		fa_destroy_list_node(det_states[i].first);
+		// Libération mémoire du tableau de correspondance des états
+		for (int i = 0; i < n; ++i) {
+			fa_destroy_list_node(det_states[i].first);
+		}
+		free(det_states);
 	}
-	free(det_states);
+	else {
+		fa_copy(self, nfa);
+	}
 }
 
-/* Fonction déterminant si un langage accepté par un automates
+/* Fonction déterminant si un langage accepté par un automate
 est inclus dans un autre langage accepté par un autre automate, pour cela
 on déterminise les deux automates entrés, puis on calcule le complémentaire
 de B afin de calculer l'intersection de A et ^B, si celle-ci est vide,
@@ -1168,4 +1202,55 @@ bool fa_is_included(const struct fa *lhs, const struct fa *rhs) {
 	free(B);
 
 	return res;
+}
+
+// Fonction déterminant si deux états sont équivalents
+bool fa_are_nerode_equivalent(const struct fa *self, size_t s1, size_t s2) {
+	if (s1 >= 0 && s1 < self->state_count
+			&& s2 >= 0 && s2 < self->state_count) {
+		struct fa fa_s1;
+		struct fa fa_s2;
+
+		fa_create_deterministic(&fa_s1, self);
+		fa_create_deterministic(&fa_s2, self);
+
+		fa_set_state_initial(&fa_s1, s1);
+		fa_set_state_initial(&fa_s2, s2);
+
+		struct graph ga_s1;
+		graph_create_from_fa(&ga_s1, &fa_s1, false);
+
+		struct graph ga_s2;
+		graph_create_from_fa(&ga_s2, &fa_s2, false);
+
+		for (int i = 0; i < self->state_count; ++i) {
+			if (!graph_has_path(&ga_s1, s1, i)) {
+				fa_remove_state(&fa_s1, i);
+			}
+
+			if (!graph_has_path(&ga_s2, s2, i)) {
+				fa_remove_state(&fa_s2, i);
+			}
+		}
+
+		bool res = false;
+
+		if (fa_is_included(&fa_s1, &fa_s2) && fa_is_included(&fa_s2, &fa_s1)) {
+			res = true;
+		}
+
+		graph_destroy(&ga_s1);
+		graph_destroy(&ga_s2);
+		fa_destroy(&fa_s1);
+		fa_destroy(&fa_s2);
+
+		return res;
+	}
+
+	return false;
+}
+
+// Minimisation d'un automate à l'aide de la congruence de Nérode
+void fa_create_minimal_nerode(struct fa *self, const struct fa *other) {
+	fa_create_deterministic(self, other);
 }

@@ -31,7 +31,7 @@ int main() {
 
 	*/
 
-	struct fa A;
+	/*struct fa A;
 	fa_create(&A, 2, 2);
 
 	fa_add_transition(&A, 0, 'a', 1);
@@ -76,9 +76,9 @@ int main() {
 	fa_destroy(&A);
 	fa_destroy(&B);
 	fa_destroy(&C);
+	*/
 
-
-	/*struct fa A;
+	struct fa A;
 	fa_create(&A, 2, 5);
 
 	fa_add_transition(&A, 0, 'b', 1);
@@ -110,7 +110,19 @@ int main() {
 
 	fa_pretty_print(&A_det, stdout);
 
+	printf("Adet C Adet ? %d\n", fa_is_included(&A_det, &A_det));
+
+	printf("Adet 0 == 0 ? %d\n", fa_are_nerode_equivalent(&A_det, 0, 0));
+
+	printf("Adet 0 == 2 ? %d\n", fa_are_nerode_equivalent(&A_det, 0, 2));
+
+	struct fa A_min;
+	fa_create_minimal_nerode(&A_min, &A_det);
+
+	fa_pretty_print(&A_min, stdout);
+
 	fa_destroy(&A);
 	fa_destroy(&A_det);
-	*/
+	fa_destroy(&A_min);
+
 }
