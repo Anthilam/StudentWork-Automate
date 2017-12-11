@@ -392,6 +392,9 @@ TEST(fa,removeNonAccesible){
   fa_add_transition(&a1,0,'a',1);
   fa_add_transition(&a1,1,'b',2);
   fa_remove_non_accessible_states(&a1);
+  // seuls etats accessible : 0 1 et 2
+  EXPECT_TRUE(fa_count_transitions(&a1)==2);
+  EXPECT_TRUE(a1.state_count==3);
   fa_destroy(&a1);
 }
 
@@ -403,16 +406,20 @@ TEST(fa,removeNonCoAccesible){
   fa_add_transition(&a1,0,'a',1);
   fa_add_transition(&a1,1,'b',2);
   fa_remove_non_co_accessible_states(&a1);
+  // seul etats co accessible 0 1 et 2
+  EXPECT_TRUE(fa_count_transitions(&a1)==2);
+  EXPECT_TRUE(a1.state_count==3);
   fa_destroy(&a1);
 }
 
 TEST(fa,faProduct){
   struct fa a1;
-  fa_create(&a1,6,10);
-  fa_set_state_final(&a1,2);
+  fa_create(&a1,2,2);
+  fa_set_state_final(&a1,1);
   fa_set_state_initial(&a1,0);
   fa_add_transition(&a1,0,'a',1);
-  fa_add_transition(&a1,1,'b',2);
+  fa_add_transition(&a1,1,'b',1);
+  fa_add_transition(&a1,1,'a',1);
 
   struct fa a2;
 	fa_create(&a2, 2, 2);
@@ -428,7 +435,61 @@ TEST(fa,faProduct){
 	struct fa a3;
 	fa_create_product(&a3, &a2, &a1);
   // faire la verification d'avoir le bon automate
+  fa_pretty_print(&a3,stdout);
+  EXPECT_TRUE(a3.state_count==3);
+  EXPECT_TRUE(fa_count_transitions(&a3)==5);
+  EXPECT_TRUE(is_initial(&a3,0));
+  EXPECT_TRUE(is_final(&a3,2));
   fa_destroy(&a1);
+}
+
+TEST(fa,deterministic){
+  struct fa a1;
+  fa_create(&a1,2,3);
+  fa_set_state_final(&a1,1);
+  fa_set_state_initial(&a1,0);
+  fa_set_state_initial(&a1,1);
+  fa_add_transition(&a1,0,'a',1);
+  fa_add_transition(&a1,0,'a',0);
+  fa_add_transition(&a1,1,'a',2);
+
+  fa_add_transition(&a1,1,'b',0);
+  fa_add_transition(&a1,1,'b',1);
+  fa_add_transition(&a1,1,'b',2);
+
+  fa_add_transition(&a1,2,'a',0);
+  fa_add_transition(&a1,2,'b',1);
+  fa_add_transition(&a1,2,'b',2);
+  EXPECT_TRUE(!fa_is_deterministic(&a1));
+  struct fa a2;
+
+  fa_create_deterministic(&a2,&a1);
+  fa_pretty_print(&a2,stdout);
+  EXPECT_TRUE(fa_is_deterministic(&a2));
+  fa_destroy(&a1);
+}
+
+TEST(fa,isIncluded){
+  struct fa a1;
+  fa_create(&a1,2,3);
+  fa_set_state_final(&a1,1);
+  fa_set_state_initial(&a1,0);
+  fa_set_state_initial(&a1,1);
+  fa_add_transition(&a1,0,'a',1);
+  fa_add_transition(&a1,0,'a',0);
+  fa_add_transition(&a1,1,'a',2);
+
+  fa_add_transition(&a1,1,'b',0);
+  fa_add_transition(&a1,1,'b',1);
+  fa_add_transition(&a1,1,'b',2);
+
+  fa_add_transition(&a1,2,'a',0);
+  fa_add_transition(&a1,2,'b',1);
+  fa_add_transition(&a1,2,'b',2);
+
+  EXPECT_TRUE(fa_is_included(&a1,&a1));
+  fa_destroy(&a1);
+
 }
 /* Minimum pour chaque test
   struct fa a1;

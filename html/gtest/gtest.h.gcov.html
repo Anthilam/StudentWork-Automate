@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2017-12-10 19:09:16</td>
+            <td class="headerValue">2017-12-11 17:02:48</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">2</td>
@@ -315,13 +315,13 @@
 <span class="lineNum">     253 </span>            : //   Expected: Foo() is even
 <span class="lineNum">     254 </span>            : //     Actual: it's 5
 <span class="lineNum">     255 </span>            : //
-<span class="lineNum">     256 </span><span class="lineCov">        972 : class GTEST_API_ AssertionResult {</span>
+<span class="lineNum">     256 </span><span class="lineCov">        664 : class GTEST_API_ AssertionResult {</span>
 <span class="lineNum">     257 </span>            :  public:
 <span class="lineNum">     258 </span>            :   // Copy constructor.
 <span class="lineNum">     259 </span>            :   // Used in EXPECT_TRUE/FALSE(assertion_result).
 <span class="lineNum">     260 </span>            :   AssertionResult(const AssertionResult&amp; other);
 <span class="lineNum">     261 </span>            :   // Used in the EXPECT_TRUE/FALSE(bool_expression).
-<span class="lineNum">     262 </span><span class="lineCov">        972 :   explicit AssertionResult(bool success) : success_(success) {}</span>
+<span class="lineNum">     262 </span><span class="lineCov">        664 :   explicit AssertionResult(bool success) : success_(success) {}</span>
 <span class="lineNum">     263 </span>            : 
 <span class="lineNum">     264 </span>            :   // Returns true iff the assertion succeeded.
 <span class="lineNum">     265 </span>            :   operator bool() const { return success_; }  // NOLINT
@@ -424,7 +424,7 @@
 <span class="lineNum">     362 </span>            :   // test in test case Foo.  Hence a sub-class can define its own
 <a name="363"><span class="lineNum">     363 </span>            :   // SetUpTestCase() method to shadow the one defined in the super</a>
 <span class="lineNum">     364 </span>            :   // class.
-<span class="lineNum">     365 </span><span class="lineCov">          3 :   static void SetUpTestCase() {}</span>
+<span class="lineNum">     365 </span><span class="lineCov">          2 :   static void SetUpTestCase() {}</span>
 <span class="lineNum">     366 </span>            : 
 <span class="lineNum">     367 </span>            :   // Tears down the stuff shared by all tests in this test case.
 <span class="lineNum">     368 </span>            :   //
@@ -432,7 +432,7 @@
 <span class="lineNum">     370 </span>            :   // test in test case Foo.  Hence a sub-class can define its own
 <a name="371"><span class="lineNum">     371 </span>            :   // TearDownTestCase() method to shadow the one defined in the super</a>
 <span class="lineNum">     372 </span>            :   // class.
-<span class="lineNum">     373 </span><span class="lineCov">          3 :   static void TearDownTestCase() {}</span>
+<span class="lineNum">     373 </span><span class="lineCov">          2 :   static void TearDownTestCase() {}</span>
 <span class="lineNum">     374 </span>            : 
 <span class="lineNum">     375 </span>            :   // Returns true iff the current test has a fatal failure.
 <span class="lineNum">     376 </span>            :   static bool HasFatalFailure();
@@ -2347,7 +2347,7 @@
 <span class="lineNum">    2285 </span>            : int RUN_ALL_TESTS() GTEST_MUST_USE_RESULT_;
 <span class="lineNum">    2286 </span>            : 
 <span class="lineNum">    2287 </span>            : inline int RUN_ALL_TESTS() {
-<span class="lineNum">    2288 </span><span class="lineCov">          3 :   return ::testing::UnitTest::GetInstance()-&gt;Run();</span>
+<span class="lineNum">    2288 </span><span class="lineCov">          2 :   return ::testing::UnitTest::GetInstance()-&gt;Run();</span>
 <span class="lineNum">    2289 </span>            : }
 <span class="lineNum">    2290 </span>            : 
 <span class="lineNum">    2291 </span>            : #endif  // GTEST_INCLUDE_GTEST_GTEST_H_
