@@ -2,8 +2,6 @@
 
 #include "gtest/gtest.h"
 
-
-
 TEST(fa,createEmpty){
   struct fa a1;
   fa_create(&a1,2,3);
@@ -441,6 +439,8 @@ TEST(fa,faProduct){
   EXPECT_TRUE(is_initial(&a3,0));
   EXPECT_TRUE(is_final(&a3,2));
   fa_destroy(&a1);
+	fa_destroy(&a2);
+	fa_destroy(&a3);
 }
 
 TEST(fa,deterministic){
@@ -461,12 +461,13 @@ TEST(fa,deterministic){
   fa_add_transition(&a1,2,'b',1);
   fa_add_transition(&a1,2,'b',2);
   EXPECT_TRUE(!fa_is_deterministic(&a1));
-  struct fa a2;
 
+  struct fa a2;
   fa_create_deterministic(&a2,&a1);
   fa_pretty_print(&a2,stdout);
   EXPECT_TRUE(fa_is_deterministic(&a2));
   fa_destroy(&a1);
+	fa_destroy(&a2);
 }
 
 TEST(fa,isIncluded){
@@ -489,11 +490,4 @@ TEST(fa,isIncluded){
 
   EXPECT_TRUE(fa_is_included(&a1,&a1));
   fa_destroy(&a1);
-
 }
-/* Minimum pour chaque test
-  struct fa a1;
-  fa_create(&a1,6,10);
-
-  fa_destroy(&a1);
-*/

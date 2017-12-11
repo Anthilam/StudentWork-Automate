@@ -23,10 +23,7 @@ run_tests: run_tests.cc $(RUNTESTS_OBJ) libfa.a
 	$(CXX) $(CXXFLAGS) $< -o $@ $(RUNTESTS_OBJ) -L. -lfa -lpthread -lgcov --coverage
 
 testfa: $(LIBDIR)/fa.o testfa.o
-	gcc -g -Wall -std=c99 -o testfa $^ $(MATH)
-
-testfa.o: testfa.c include/fa.h
-	gcc $(CFLAGS) $< -o testfa.o $< $(MATH) -lgcov --coverage
+	gcc -g -Wall -std=c99 -o testfa $^ $(MATH) -lgcov --coverage
 
 coverage: run_tests
 	./run_tests

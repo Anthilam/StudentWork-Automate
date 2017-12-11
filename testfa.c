@@ -110,6 +110,8 @@ int main() {
 
 	fa_pretty_print(&A_det, stdout);
 
+	printf("Adet det ? %d\n", fa_is_deterministic(&A_det));
+
 	printf("Adet C Adet ? %d\n", fa_is_included(&A_det, &A_det));
 
 	printf("Adet 0 == 0 ? %d\n", fa_are_nerode_equivalent(&A_det, 0, 0));

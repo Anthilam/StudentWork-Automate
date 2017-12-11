@@ -783,12 +783,10 @@ void fa_remove_non_accessible_states(struct fa *self) {
 		}
 	}
 
-	int count = 0;
-	// Si un état n'a pas été visité on le supprime
-	for (int i = 0; i < self->state_count; ++i) {
+	// On supprime les états non-visités
+	for (int i = self->state_count-1; i >= 0; --i) {
 		if (!visited[i]) {
-			fa_remove_state(self, i-count);
-			++count;
+			fa_remove_state(self, i);
 		}
 	}
 
@@ -815,12 +813,10 @@ void fa_remove_non_co_accessible_states(struct fa *self) {
 		}
 	}
 
-	int count = 0;
-	// Si un état n'a pas été visité on le supprime
-	for (int i = 0; i < self->state_count; ++i) {
+	// On supprimes les états non-visités
+	for (int i = self->state_count-1; i >= 0; --i) {
 		if (!visited[i]) {
-			fa_remove_state(self, i-count);
-			++count;
+			fa_remove_state(self, i);
 		}
 	}
 
@@ -1031,7 +1027,6 @@ void fa_create_deterministic(struct fa *self, const struct fa *nfa) {
 	/* Pour répresenter le tableau de déterminisation, on utilise self->state_array,
 	puis on effectue les bonnes correspondances à la fin pour obtenir l'automates
 	determinisé, toujours dans self->state_array */
-
 	if (!fa_is_deterministic(nfa)) {
 		// Variable contenant le nombre d'états maximum de l'automate déterminisé
 		int n = pow(2, nfa->state_count);
@@ -1049,23 +1044,29 @@ void fa_create_deterministic(struct fa *self, const struct fa *nfa) {
 			det_states[i].first->value = -1;
 		}
 
-		// Ajout des états initiaux
+		// Ajout de l'état initial à partir des états initiaux
+		det_states[0].first->value = nfa->array_init.value[0];
+		fa_set_state_initial(self, 0);
+
+		for (int i = 1; i < nfa->array_init.used; ++i) {
+			struct list_node *l = malloc(sizeof(struct list_node));
+			l->value = nfa->array_init.value[i];
+			l->next = NULL;
+			fa_add_to_det_states(det_states, l, nbStates);
+			fa_destroy_list_node(l);
+		}
+
 		for (int i = 0; i < nfa->array_init.used; ++i) {
-			int current = nfa->array_init.value[i];
-			det_states[i].first->value = current;
-
-			fa_set_state_initial(self, current);
-
 			for (int j = 0; j < nfa->alpha_count; ++j) {
-				struct list_node *l = nfa->state_array[current][j].first;
+				struct list_node *l = nfa->state_array[nfa->array_init.value[i]][j].first;
 				while (l != NULL) {
-					fa_add_transition(self, current, 'a'+j, l->value);
+					fa_add_transition(self, 0, 'a'+j, l->value);
 					l = l->next;
 				}
 			}
-
-			++nbStates;
 		}
+
+		++nbStates;
 
 		// Ajout des états suivants
 		bool run = true;
