@@ -10,7 +10,7 @@ LIBFA_OBJ = $(LIBDIR)/fa.o
 
 RUNTESTS_OBJ = tests/src/gtest-all.o tests/test_fa.o
 
-PROGS=run_tests libfa.a
+PROGS=run_tests libfa.a testfa
 
 MATH=-lm
 

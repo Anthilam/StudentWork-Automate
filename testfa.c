@@ -118,13 +118,26 @@ int main() {
 
 	printf("Adet 0 == 2 ? %d\n", fa_are_nerode_equivalent(&A_det, 0, 2));
 
-	struct fa A_min;
-	fa_create_minimal_nerode(&A_min, &A_det);
+	struct fa max;
+	fa_create(&max, 3, 4);
 
-	fa_pretty_print(&A_min, stdout);
+	fa_add_transition(&max, 0, 'a', 1);
+	fa_add_transition(&max, 0, 'b', 2);
+	fa_add_transition(&max, 1, 'c', 3);
+	fa_add_transition(&max, 2, 'c', 3);
+
+	fa_set_state_initial(&max, 0);
+	fa_set_state_final(&max, 3);
+
+	struct fa min;
+
+	fa_create_minimal_nerode(&min, &max);
+
+	fa_pretty_print(&max, stdout);
+	fa_pretty_print(&min, stdout);
 
 	fa_destroy(&A);
 	fa_destroy(&A_det);
-	fa_destroy(&A_min);
-
+	fa_destroy(&min);
+	fa_destroy(&max);
 }

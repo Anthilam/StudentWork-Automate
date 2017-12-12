@@ -383,10 +383,10 @@ void fa_remove_state(struct fa *self, size_t state) {
 // Compteur de transitions
 size_t fa_count_transitions(const struct fa *self) {
 	size_t count = 0;
-	// Parcourt du tableau 2D
+	// Parcours du tableau 2D
  	for (int i = 0; i < self->state_count; ++i) {
 		for (int j = 0; j < self->alpha_count; ++j) {
-			// Parcourt des listes chaînées
+			// Parcours des listes chaînées
 			if (self->state_array[i][j].first != NULL) {
 				struct list_node *l = self->state_array[i][j].first;
 				++count;
@@ -513,7 +513,7 @@ bool graph_has_path_with_prev(const struct graph *self, size_t from, size_t to, 
 	while (l != NULL) {
 		// Si l'arc n'est pas une boucle de l'état sur lui-même
 		if (from != l->value && l->value != prev) {
-			// Alors on effectue le parcourt
+			// Alors on effectue le parcours
 			if (graph_has_path_with_prev(self, l->value, to, from)) {
 				return true;
 			}
@@ -1253,5 +1253,69 @@ bool fa_are_nerode_equivalent(const struct fa *self, size_t s1, size_t s2) {
 
 // Minimisation d'un automate à l'aide de la congruence de Nérode
 void fa_create_minimal_nerode(struct fa *self, const struct fa *other) {
+	// Déterminisation de l'automate
 	fa_create_deterministic(self, other);
+
+	// Minimisation
+	bool run = true; // Booléen spécifiant l'exécution de la boucle
+	while (run) {
+		// On spécifie d'arrêter la boucle si pas de Minimisation
+		run = false;
+
+		// Initilisation d'un tableau de booléen représentant les états visités lors du test de Nérode
+		bool visited[self->state_count];
+		for (int i = 0; i < self->state_count; ++i) {
+			visited[i] = false;
+		}
+
+		// Parcours des états et test de Nérode
+		bool ok = true;
+		int i = 0;
+		while (ok && i < self->state_count) {
+			for (int j = 0; j < self->state_count; ++j) {
+				// Si les états sont différents
+				if (i != j) {
+					// Test de Nérode
+					if (fa_are_nerode_equivalent(self, i, j)) {
+						// On passe l'état visité à true
+						visited[j] = true;
+						// On spécifie de continuer la boucle
+						run = true;
+
+						// Fusion des états
+						for (int k = 0; k < self->alpha_count; ++k) {
+							struct list_node *l = self->state_array[j][k].first;
+							while (l != NULL) {
+								fa_add_transition(self, i, 'a'+k, l->value);
+								l = l->next;
+							}
+						}
+
+						for (int a = 0; a < self->state_count; ++a) {
+							for (int b = 0; b < self->alpha_count; ++b) {
+								struct list_node *l = self->state_array[a][b].first;
+								while (l != NULL) {
+									if (l->value == j) {
+										l->value = i;
+									}
+									l = l->next;
+								}
+							}
+						}
+
+						// Terminaison de la boucle
+						ok = false;
+						break;
+					}
+				}
+			}
+			++i;
+		}
+
+		for (int i = 0; i < self->state_count; ++i) {
+			if (visited[i]) {
+				fa_remove_state(self, i);
+			}
+		}
+	}
 }
