@@ -491,3 +491,89 @@ TEST(fa,isIncluded){
   EXPECT_TRUE(fa_is_included(&a1,&a1));
   fa_destroy(&a1);
 }
+
+TEST(fa,Minimisation0){
+  struct fa a1;
+  fa_create(&a1,2,4);
+  fa_set_state_initial(&a1,0);
+  fa_set_state_final(&a1,3);
+
+  fa_add_transition(&a1,0,'a',1);
+  fa_add_transition(&a1,0,'a',2);
+  fa_add_transition(&a1,0,'b',1);
+  fa_add_transition(&a1,0,'b',2);
+
+  fa_add_transition(&a1,1,'a',3);
+  fa_add_transition(&a1,2,'a',3);
+  fa_add_transition(&a1,1,'b',3);
+  fa_add_transition(&a1,2,'b',3);
+
+  struct fa a2;
+  fa_create_minimal_nerode(&a2,&a1);
+
+  EXPECT_TRUE(fa_count_transitions(&a1)==4);
+  EXPECT_TRUE(a1.state_count == 3);
+  EXPECT_TRUE(is_initial(&a1,0));
+  EXPECT_TRUE(is_final(&a1,0));
+
+  fa_destroy(&a2);
+  fa_destroy(&a1);
+
+
+}
+
+TEST(fa,Minimisation1){
+  struct fa a1;
+  fa_create(&a1,2,6);
+  fa_set_state_initial(&a1,0);
+  fa_set_state_final(&a1,3);
+  fa_set_state_final(&a1,4);
+
+  fa_add_transition(&a1,0,'a',1);
+  fa_add_transition(&a1,0,'b',2);
+  fa_add_transition(&a1,1,'b',3);
+  fa_add_transition(&a1,1,'a',2);
+  fa_add_transition(&a1,2,'a',1);
+  fa_add_transition(&a1,2,'b',4);
+  fa_add_transition(&a1,3,'a',4);
+  fa_add_transition(&a1,3,'b',5);
+  fa_add_transition(&a1,4,'a',3);
+  fa_add_transition(&a1,4,'b',5);
+  fa_add_transition(&a1,5,'a',5);
+  fa_add_transition(&a1,5,'b',5);
+
+
+  struct fa a2;
+  fa_create_minimal_nerode(&a2,&a1);
+
+  EXPECT_TRUE(fa_count_transitions(&a1)==8);
+  EXPECT_TRUE(a1.state_count == 4);
+  EXPECT_TRUE(is_initial(&a1,0));
+  EXPECT_TRUE(is_final(&a1,2));
+
+  fa_destroy(&a2);
+  fa_destroy(&a1);
+}
+
+TEST(fa,Minimisation2){
+  struct fa a1;
+  fa_create(&a1,2,3);
+  fa_set_state_initial(&a1,0);
+  fa_set_state_initial(&a1,1);
+  fa_set_state_final(&a1,2);
+
+  fa_add_transition(&a1,0,'a',1);
+  fa_add_transition(&a1,1,'a',2);
+  fa_add_transition(&a1,0,'b',1);
+  fa_add_transition(&a1,1,'b',2);
+  struct fa a2;
+  fa_create_minimal_nerode(&a2,&a1);
+
+  EXPECT_TRUE(fa_count_transitions(&a1)==4);
+  EXPECT_TRUE(a1.state_count == 4);
+  EXPECT_TRUE(is_initial(&a1,0));
+  EXPECT_TRUE(is_final(&a1,2));
+
+  fa_destroy(&a2);
+  fa_destroy(&a1);
+}
