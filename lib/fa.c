@@ -1256,6 +1256,8 @@ void fa_create_minimal_nerode(struct fa *self, const struct fa *other) {
 	// Déterminisation de l'automate
 	fa_create_deterministic(self, other);
 
+	fa_pretty_print(self, stdout);
+
 	// Minimisation
 	bool run = true; // Booléen spécifiant l'exécution de la boucle
 	while (run) {
