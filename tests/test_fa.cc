@@ -466,6 +466,7 @@ TEST(fa,deterministic){
   fa_create_deterministic(&a2,&a1);
   fa_pretty_print(&a2,stdout);
   EXPECT_TRUE(fa_is_deterministic(&a2));
+
   fa_destroy(&a1);
 	fa_destroy(&a2);
 }
