@@ -497,24 +497,43 @@ void graph_depth_first_search(const struct graph *self, size_t state, bool *visi
 bool graph_has_path(const struct graph *self, size_t from, size_t to) {
 	if (from >= 0 && from < self->state_count
 			&& to >= 0 && to < self->state_count) {
-		return graph_has_path_with_prev(self, from, to, 0);
+		bool visited[self->state_count];
+		for (int i = 0; i < self->state_count; ++i) {
+			visited[i] = false;
+		}
+
+		visited[from] = true;
+		bool res = graph_has_path_with_prev(self, from, to, visited);
+
+		return res;
 	}
 
 	return false;
 }
 
-bool graph_has_path_with_prev(const struct graph *self, size_t from, size_t to, size_t prev) {
+bool graph_has_path_with_prev(const struct graph *self, size_t from, size_t to, bool *visited) {
 	if (from == to) {
 		return true;
 	}
 
 	struct list_node *l = self->arc[from].first;
-
 	while (l != NULL) {
 		// Si l'arc n'est pas une boucle de l'état sur lui-même
-		if (from != l->value && l->value != prev) {
+		bool ok = false;
+		if (from != l->value) {
+			for (int i = 0; i < self->state_count; ++i) {
+				if (l->value == i && visited[i] == false) {
+					ok = true;
+					break;
+				}
+			}
+		}
+
+		if (ok) {
 			// Alors on effectue le parcours
-			if (graph_has_path_with_prev(self, l->value, to, from)) {
+			visited[l->value] = true;
+
+			if (graph_has_path_with_prev(self, l->value, to, visited)) {
 				return true;
 			}
 
@@ -766,6 +785,7 @@ bool fa_is_language_empty(const struct fa *self) {
 // Suppression des états non-accessibles (accessible s'il existe un chemin partant d'un état initial et allant jusqu'à l'état voulu)
 void fa_remove_non_accessible_states(struct fa *self) {
 	struct graph g;
+
 	graph_create_from_fa(&g, self, false);
 
 	// Initialisation du tableau des états visités
@@ -897,7 +917,7 @@ void fa_create_product(struct fa *self, const struct fa *lhs, const struct fa *r
 		}
 	}
 
-	// Suppresion des états inutiles
+	// Suppression des états inutiles
 	fa_remove_non_accessible_states(self);
 	fa_remove_non_co_accessible_states(self);
 }
@@ -905,6 +925,7 @@ void fa_create_product(struct fa *self, const struct fa *lhs, const struct fa *r
 // Détermine si l'intersection entre deux automates est vide
 bool fa_has_empty_intersection(const struct fa *lhs, const struct fa *rhs) {
 	struct fa a;
+
 	fa_create_product(&a, lhs, rhs);
 
 	bool res = fa_is_language_empty(&a);
@@ -982,6 +1003,11 @@ bool fa_add_deterministic_state(struct fa *self, const struct fa *nfa, struct li
 				struct list_node *l = nfa->state_array[current->value][j].first;
 				while (l != NULL) {
 					fa_add_transition(self, nbStates, 'a'+j, l->value);
+					for (int i = 0; i < nfa->array_final.used; ++i) {
+						if (l->value == i) {
+							fa_set_state_final(self, nbStates);
+						}
+					}
 					l = l->next;
 				}
 			}
@@ -1013,7 +1039,7 @@ void fa_copy(struct fa *self, const struct fa *other) {
 	self->array_final.value = malloc(other->array_final.size*sizeof(int));
 
 	memcpy(self->array_init.value, other->array_init.value, other->array_init.size*sizeof(int));
-	memcpy(self->array_final.value, other->array_final.value, other->array_init.size*sizeof(int));
+	memcpy(self->array_final.value, other->array_final.value, other->array_final.size*sizeof(int));
 
 	self->array_init.size = other->array_init.size;
 	self->array_init.used = other->array_init.used;
@@ -1045,10 +1071,9 @@ void fa_create_deterministic(struct fa *self, const struct fa *nfa) {
 		}
 
 		// Ajout de l'état initial à partir des états initiaux
-		det_states[0].first->value = nfa->array_init.value[0];
 		fa_set_state_initial(self, 0);
 
-		for (int i = 1; i < nfa->array_init.used; ++i) {
+		for (int i = 0; i < nfa->array_init.used; ++i) {
 			struct list_node *l = malloc(sizeof(struct list_node));
 			l->value = nfa->array_init.value[i];
 			l->next = NULL;
@@ -1061,6 +1086,11 @@ void fa_create_deterministic(struct fa *self, const struct fa *nfa) {
 				struct list_node *l = nfa->state_array[nfa->array_init.value[i]][j].first;
 				while (l != NULL) {
 					fa_add_transition(self, 0, 'a'+j, l->value);
+					for (int k = 0; k < nfa->array_final.used; ++k) {
+						if (l->value == k) {
+							fa_set_state_final(self, 0);
+						}
+					}
 					l = l->next;
 				}
 			}
@@ -1085,59 +1115,36 @@ void fa_create_deterministic(struct fa *self, const struct fa *nfa) {
 		}
 
 		/* Mise en place de la correspondance des états
-		Pour cela, on regarde le contenu du tableau de déterminisation, puis on regarde
-		dans la liste d'ensembles d'états la correspondance, et on change le contenu du tableau
-		par l'indice correspondant, sur le même principe que fa_look_in_det_states */
+		Pour cela, on regarde le contenu du tableau de déterminisation,
+		puis on regarde dans la liste d'ensembles d'états la correspondance, et on
+		change le contenu du tableau par l'indice correspondant, sur le même
+		principe que fa_look_in_det_states */
 		for (int i = 0; i < nbStates; ++i) {
 			for (int j = 0; j < nfa->alpha_count; ++j) {
 				bool res[nbStates];
 				for (int k = 0; k < nbStates; ++k) {
-					res[k] = true;
-				}
-
-				for (int k = 0; k < nbStates; ++k) {
+					res[k] = false;
 					struct list_node *det = det_states[k].first;
 					struct list_node *toAdd = self->state_array[i][j].first;
 
 					while (toAdd != NULL && det != NULL) {
-						if (det->value != toAdd->value) {
-							res[k] = false;
-							break;
+						if (det->value == toAdd->value) {
+							res[k] = true;
 						}
 
 						det = det->next;
 						toAdd = toAdd->next;
-
-						if ((det == NULL && toAdd != NULL)
-						 		|| (det != NULL && toAdd == NULL)) {
-							res[k] = false;
-							break;
-						}
 					}
 				}
 
 				// Passage des ensembles d'états au bon indice correspondants
 				for (int k = 0; k < nbStates; ++k) {
 					if (res[k]) {
-						// Vérification de la présence d'un état final dans l'ensemble d'états
-						for (int z = 0; z < nfa->array_final.used; ++z) {
-							struct list_node *toAdd = self->state_array[i][j].first;
-							while (toAdd != NULL) {
-								// Ajout d'un état final si présence d'un dans l'ensemble d'états
-								if (toAdd->value == nfa->array_final.value[z]) {
-									fa_set_state_final(self, k);
-								}
-
-								toAdd = toAdd->next;
-							}
-						}
-
 						// On détruit l'ensemble d'états puis on ajout le bon indice correspondant
 	 					fa_destroy_list(&self->state_array[i][j]);
 						fa_add_transition(self, i, 'a'+j, k);
 					}
 				}
-
 			}
 		}
 
@@ -1187,6 +1194,8 @@ bool fa_is_included(const struct fa *lhs, const struct fa *rhs) {
 
 	free(B->array_final.value);
 	B->array_final.value = NULL;
+	B->array_final.size = 0;
+	B->array_final.used = 0;
 	for (int i = 0; i < B->state_count; ++i) {
 		if (!is_final[i]) {
 			fa_set_state_final(B, i);
@@ -1209,41 +1218,54 @@ bool fa_is_included(const struct fa *lhs, const struct fa *rhs) {
 bool fa_are_nerode_equivalent(const struct fa *self, size_t s1, size_t s2) {
 	if (s1 >= 0 && s1 < self->state_count
 			&& s2 >= 0 && s2 < self->state_count) {
-		struct fa fa_s1;
-		struct fa fa_s2;
+		struct fa *fa_s1 = malloc(sizeof(struct fa));
+		struct fa *fa_s2 = malloc(sizeof(struct fa));
 
-		fa_create_deterministic(&fa_s1, self);
-		fa_create_deterministic(&fa_s2, self);
+		fa_copy(fa_s1, self);
+		fa_copy(fa_s2, self);
 
-		fa_set_state_initial(&fa_s1, s1);
-		fa_set_state_initial(&fa_s2, s2);
+		free(fa_s1->array_init.value);
+		fa_s1->array_init.value = NULL;
+		fa_s1->array_init.size = 0;
+		fa_s1->array_init.used = 0;
+		fa_set_state_initial(fa_s1, s1);
 
-		struct graph ga_s1;
-		graph_create_from_fa(&ga_s1, &fa_s1, false);
+		free(fa_s2->array_init.value);
+		fa_s2->array_init.value = NULL;
+		fa_s2->array_init.size = 0;
+		fa_s2->array_init.used = 0;
+		fa_set_state_initial(fa_s2, s2);
 
-		struct graph ga_s2;
-		graph_create_from_fa(&ga_s2, &fa_s2, false);
+		struct graph *ga_s1 = malloc(sizeof(struct graph));
+		graph_create_from_fa(ga_s1, fa_s1, false);
+
+		struct graph *ga_s2 = malloc(sizeof(struct graph));
+		graph_create_from_fa(ga_s2, fa_s2, false);
 
 		for (int i = 0; i < self->state_count; ++i) {
-			if (!graph_has_path(&ga_s1, s1, i)) {
-				fa_remove_state(&fa_s1, i);
+			if (!graph_has_path(ga_s1, s1, i)) {
+				fa_remove_state(fa_s1, i);
 			}
 
-			if (!graph_has_path(&ga_s2, s2, i)) {
-				fa_remove_state(&fa_s2, i);
+			if (!graph_has_path(ga_s2, s2, i)) {
+				fa_remove_state(fa_s2, i);
 			}
 		}
 
 		bool res = false;
 
-		if (fa_is_included(&fa_s1, &fa_s2) && fa_is_included(&fa_s2, &fa_s1)) {
+		if (fa_is_included(fa_s1, fa_s2) && fa_is_included(fa_s2, fa_s1)) {
 			res = true;
 		}
 
-		graph_destroy(&ga_s1);
-		graph_destroy(&ga_s2);
-		fa_destroy(&fa_s1);
-		fa_destroy(&fa_s2);
+		graph_destroy(ga_s1);
+		free(ga_s1);
+		graph_destroy(ga_s2);
+		free(ga_s2);
+		fa_destroy(fa_s1);
+		free(fa_s1);
+		fa_destroy(fa_s2);
+		free(fa_s2);
 
 		return res;
 	}
@@ -1256,17 +1278,13 @@ void fa_create_minimal_nerode(struct fa *self, const struct fa *other) {
 	// Déterminisation de l'automate
 	fa_create_deterministic(self, other);
 
+	fa_pretty_print(self, stdout);
+
 	// Minimisation
 	bool run = true; // Booléen spécifiant l'exécution de la boucle
 	while (run) {
 		// On spécifie d'arrêter la boucle si pas de Minimisation
 		run = false;
-
-		// Initilisation d'un tableau de booléen représentant les états visités lors du test de Nérode
-		bool visited[self->state_count];
-		for (int i = 0; i < self->state_count; ++i) {
-			visited[i] = false;
-		}
 
 		// Parcours des états et test de Nérode
 		bool ok = true;
@@ -1277,20 +1295,10 @@ void fa_create_minimal_nerode(struct fa *self, const struct fa *other) {
 				if (i != j) {
 					// Test de Nérode
 					if (fa_are_nerode_equivalent(self, i, j)) {
-						// On passe l'état visité à true
-						visited[j] = true;
 						// On spécifie de continuer la boucle
 						run = true;
 
 						// Fusion des états
-						for (int k = 0; k < self->alpha_count; ++k) {
-							struct list_node *l = self->state_array[j][k].first;
-							while (l != NULL) {
-								fa_add_transition(self, i, 'a'+k, l->value);
-								l = l->next;
-							}
-						}
-
 						for (int a = 0; a < self->state_count; ++a) {
 							for (int b = 0; b < self->alpha_count; ++b) {
 								struct list_node *l = self->state_array[a][b].first;
@@ -1303,18 +1311,53 @@ void fa_create_minimal_nerode(struct fa *self, const struct fa *other) {
 							}
 						}
 
+						for (int k = 0; k < self->alpha_count; ++k) {
+							struct list_node *l = self->state_array[j][k].first;
+							while (l != NULL) {
+								fa_add_transition(self, i, 'a'+k, l->value);
+								l = l->next;
+							}
+						}
+
+						fa_remove_state(self, j);
+
 						// Terminaison de la boucle
 						ok = false;
-						break;
 					}
+				}
+
+				if (!ok) {
+					break;
 				}
 			}
 			++i;
 		}
+	}
 
-		for (int i = 0; i < self->state_count; ++i) {
-			if (visited[i]) {
-				fa_remove_state(self, i);
+	// Retrait des transitions en double
+	for (int i = 0; i < self->state_count; ++i) {
+		for (int j = 0; j < self->alpha_count; ++j) {
+			struct list_node *l = self->state_array[i][j].first;
+			while (l != NULL) {
+				int tmp = l->value;
+				bool ok = true;
+
+				struct list_node *m = self->state_array[i][j].first;
+				while (m != NULL && ok) {
+					if (l->value == m->value) {
+						ok = false;
+					}
+
+					m = m->next;
+				}
+
+				if (!ok) {
+					fa_remove_transition(self, i, 'a'+j, l->value);
+					fa_add_transition(self, i, 'a'+j, tmp);
+					break;
+				}
+
+				l = l->next;
 			}
 		}
 	}

@@ -99,7 +99,7 @@ void fa_make_complete(struct fa *self);
 // Fonction de parcours en profondeur d'un graphe
 void graph_depth_first_search(const struct graph *self, size_t state, bool *visited);
 
-bool graph_has_path_with_prev(const struct graph *self, size_t from, size_t to, size_t prev);
+bool graph_has_path_with_prev(const struct graph *self, size_t from, size_t to, bool *visited);
 // Fonction déterminant si un chemin existe entre deux états
 bool graph_has_path(const struct graph *self, size_t from, size_t to);
 

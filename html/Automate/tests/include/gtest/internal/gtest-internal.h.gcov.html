@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2017-12-12 18:30:15</td>
+            <td class="headerValue">2017-12-14 18:53:25</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">48</td>
@@ -495,14 +495,14 @@
 <span class="lineNum">     433 </span>            : // of a Test object.
 <span class="lineNum">     434 </span>            : class TestFactoryBase {
 <span class="lineNum">     435 </span>            :  public:
-<span class="lineNum">     436 </span><span class="lineCov">         48 :   virtual ~TestFactoryBase() {}</span>
+<span class="lineNum">     436 </span><span class="lineCov">        240 :   virtual ~TestFactoryBase() {}</span>
 <span class="lineNum">     437 </span>            : 
 <span class="lineNum">     438 </span>            :   // Creates a test instance to run. The instance is both created and destroyed
 <span class="lineNum">     439 </span>            :   // within TestInfoImpl::Run()
 <span class="lineNum">     440 </span>            :   virtual Test* CreateTest() = 0;
 <span class="lineNum">     441 </span>            : 
 <span class="lineNum">     442 </span>            :  protected:
-<span class="lineNum">     443 </span><span class="lineCov">         48 :   TestFactoryBase() {}</span>
+<span class="lineNum">     443 </span><span class="lineCov">        240 :   TestFactoryBase() {}</span>
 <span class="lineNum">     444 </span>            : 
 <span class="lineNum">     445 </span>            :  private:
 <span class="lineNum">     446 </span>            :   GTEST_DISALLOW_COPY_AND_ASSIGN_(TestFactoryBase);
@@ -511,9 +511,9 @@
 <span class="lineNum">     449 </span>            : // This class provides implementation of TeastFactoryBase interface.
 <a name="450"><span class="lineNum">     450 </span>            : // It is used in TEST and TEST_F macros.</a>
 <span class="lineNum">     451 </span>            : template &lt;class TestClass&gt;
-<span class="lineNum">     452 </span><span class="lineCov">        192 : class TestFactoryImpl : public TestFactoryBase {</span>
+<span class="lineNum">     452 </span><span class="lineCov">        960 : class TestFactoryImpl : public TestFactoryBase {</span>
 <span class="lineNum">     453 </span>            :  public:
-<span class="lineNum">     454 </span><span class="lineCov">         96 :   virtual Test* CreateTest() { return new TestClass; }</span>
+<span class="lineNum">     454 </span><span class="lineCov">        480 :   virtual Test* CreateTest() { return new TestClass; }</span>
 <span class="lineNum">     455 </span>            : };
 <span class="lineNum">     456 </span>            : 
 <span class="lineNum">     457 </span>            : #if GTEST_OS_WINDOWS
